@@ -3,8 +3,8 @@ id: 6
 title: 执行清理：重命名规整与目录重组
 type: task
 labels: [wayfinder:task]
-status: open
-assignee:
+status: in-progress
+assignee: walk4-2026-10-13
 blocked-by: [4, 5]
 ---
 

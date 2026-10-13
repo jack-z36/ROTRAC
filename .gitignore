@@ -1,25 +1,68 @@
-# ===== ROTRAC 根 .gitignore（票据 03 建立，临时口径）=====
-# 原则：排除「可再生/待裁决」的大体量内容；源代码、文档、配置、wayfinder/ 全部入库。
-# runs/ 的最终去留由 wayfinder 票据 04 裁决，venv 同理。
+# ===== ROTRAC 根 .gitignore（票据 06 扁平化后合并版）=====
+# 仓库根 = ROS 2 colcon workspace
 
-# Python 运行环境（481M venv，票据 04 裁决去留）
-/dexhit_collection/
+# OS 与编辑器
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
 
-# 前端依赖与构建产物（npm install / vite build 再生）
+# Python 环境与缓存（.venv 为就地修复的数值环境：pinocchio/nlopt/vendor omnihand SDK）
+.venv/
+venv/
+env/
+.conda/
+.conda-envs/
+.miniconda3/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# colcon workspace 输出（根即 workspace）
+/build/
+/install/
+/log/
+/.colcon/
+
+# 数据、生成物、模型、运行日志
+*.mcap
+*.mcap.*
+*.parquet
+*.h5
+*.hdf5
+*.zarr/
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.onnx
+/datasets/
+/models/
+/artifacts/
+/logs/
+
+# runs/ 录制数据不入库（已归档至 ~/backups/ROTRAC-runs-archive/）；仅保留活参数文件
+/runs/*
+!/runs/retargeting_diag_params.yaml
+
+# 包内运行产物目录
+src/**/runs/
+*.log
+**/.cache/
+**/checkpoints/
+
+# 前端
 node_modules/
 web/dist/
 
-# colcon 构建产物与日志
-build/
-install/
-log/
-
-# Python 缓存
-__pycache__/
-*.pyc
-.pytest_cache/
-
-# 录制数据（79M，票据 04 裁决；保留其中的 yaml 配置文件）
-runs/**
-!runs/**/
-!runs/**/*.yaml
+# 本地密钥
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.secret
