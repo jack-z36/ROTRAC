@@ -18,22 +18,14 @@ set -Eeuo pipefail
 # workstation described by the collection runtime handoff.
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-WORKSPACE_ROOT="$(cd -- "$SCRIPT_DIR/../../../../.." && pwd)"
+WORKSPACE_ROOT="$(cd -- "$SCRIPT_DIR/../../.." && pwd)"
 INSTALL_PREFIX="$WORKSPACE_ROOT/install"
 RETARGET_PARAMS="$WORKSPACE_ROOT/runs/retargeting_diag_params.yaml"
-RETARGET_WRAPPER="$WORKSPACE_ROOT/src/collection/hand_retargeting_node/scripts/hand_retargeting_node"
+RETARGET_WRAPPER="$WORKSPACE_ROOT/src/hand_retargeting_node/scripts/hand_retargeting_node"
 
 ROS_SETUP="/opt/ros/jazzy/setup.bash"
-DEFAULT_RUNTIME_PREFIX="$WORKSPACE_ROOT/../../dexhit_collection"
-if [[ ! -d "$DEFAULT_RUNTIME_PREFIX/lib/python3.12/site-packages" ]]; then
-  DEFAULT_RUNTIME_PREFIX="/home/hit/miniforge3/envs/dexhit_collection"
-fi
-RUNTIME_PREFIX="${DEXHIT_COLLECTION_PREFIX:-$DEFAULT_RUNTIME_PREFIX}"
-DEFAULT_MODEL_FIXTURE="$WORKSPACE_ROOT/../../omnihand_o10_fixture-f4fd0d913c2151bcb4be0d29fbc02761b9638009"
-if [[ ! -f "$DEFAULT_MODEL_FIXTURE/provenance.json" ]]; then
-  DEFAULT_MODEL_FIXTURE="/home/hit/dexhit-external/omnihand_o10_fixture-f4fd0d913c2151bcb4be0d29fbc02761b9638009"
-fi
-MODEL_FIXTURE="${OMNIHAND_O10_MODEL_FIXTURE:-$DEFAULT_MODEL_FIXTURE}"
+RUNTIME_PREFIX="${DEXHIT_COLLECTION_PREFIX:-$WORKSPACE_ROOT/.venv}"
+MODEL_FIXTURE="${OMNIHAND_O10_MODEL_FIXTURE:-$WORKSPACE_ROOT/omnihand_o10_model}"
 if [[ ! -f "$MODEL_FIXTURE/provenance.json" && -n "${OMNIHAND_O10_MODEL_FIXTURE:-}" && -f "$DEFAULT_MODEL_FIXTURE/provenance.json" ]]; then
   printf "[omnihand-launch] WARN: ignoring invalid OMNIHAND_O10_MODEL_FIXTURE=%q; using %s\n" "$OMNIHAND_O10_MODEL_FIXTURE" "$DEFAULT_MODEL_FIXTURE" >&2
   MODEL_FIXTURE="$DEFAULT_MODEL_FIXTURE"

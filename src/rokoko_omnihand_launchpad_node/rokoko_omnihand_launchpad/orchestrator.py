@@ -390,7 +390,7 @@ class Orchestrator:
                             "profile": profile, "label": payload.get("label", ""),
                             "template": template,
                             "mode": payload.get("mode", execution_mode),
-                            "udp_port": ROKOKO_UDP_PORT, "actor": payload.get("actor", 0),
+                            "udp_port": payload.get("udp_port", ROKOKO_UDP_PORT), "actor": payload.get("actor", 0),
                             "can_channel": payload.get("can_channel", "can0"),
                             "execution_mode": execution_mode,
                             "confirmed": bool(payload.get("confirmation"))}

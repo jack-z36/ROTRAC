@@ -8,11 +8,11 @@
 set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-WORKSPACE_ROOT="$SCRIPT_DIR"
-IMPLEMENTATION="$WORKSPACE_ROOT/src/collection/teleoperation_support/production_bringup/scripts/start_omnihand_control.sh"
+WORKSPACE_ROOT="$(cd -- "$SCRIPT_DIR/.." && pwd -P)"
+IMPLEMENTATION="$WORKSPACE_ROOT/src/teleoperation_support/production_bringup/scripts/start_omnihand_control.sh"
 
 [[ -f "$WORKSPACE_ROOT/AGENTS.md" ]] \
-  || { echo "[omnihand-launch] ERROR: not a Dexhit collection root: $WORKSPACE_ROOT" >&2; exit 1; }
+  || { echo "[omnihand-launch] ERROR: not the ROTRAC workspace root: $WORKSPACE_ROOT" >&2; exit 1; }
 [[ -x "$IMPLEMENTATION" ]] \
   || { echo "[omnihand-launch] ERROR: missing executable launcher: $IMPLEMENTATION" >&2; exit 1; }
 

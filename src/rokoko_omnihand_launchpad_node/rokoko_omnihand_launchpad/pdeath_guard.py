@@ -7,6 +7,11 @@ child is SIGKILLed and the real node process is orphaned (it stays in the ROS
 graph and blocks later starts).  The guard runs as the direct child instead:
 on parent death it receives SIGTERM, forwards it to the whole process group,
 escalates to SIGKILL after a bounded wait, and only then exits.
+
+The SIGTERM handler only records a flag; killpg/exit happen in the main loop.
+Doing process work inside the handler raced against ``Popen``'s fork/exec
+(the handler ran with the child still unborn, set SIGTERM to ``SIG_IGN``, and
+never completed), which leaked both the guard and its child forever.
 """
 
 from __future__ import annotations
@@ -23,6 +28,7 @@ PR_SET_PDEATHSIG = 1
 ESCALATION_TIMEOUT_SEC = 5.0
 
 _child: subprocess.Popen[bytes] | None = None
+_term_signal: int | None = None
 
 
 def _arm_pdeathsig() -> None:
@@ -31,9 +37,14 @@ def _arm_pdeathsig() -> None:
         raise OSError(ctypes.get_errno(), "prctl(PR_SET_PDEATHSIG) failed")
 
 
-def _forward_to_group(signum: int, _frame: object) -> None:
-    global _child
-    signal.signal(signal.SIGTERM, signal.SIG_IGN)
+def _mark_stopped(signum: int, _frame: object) -> None:
+    """Record the stop request; all cleanup happens in the main loop."""
+    global _term_signal
+    if _term_signal is None:
+        _term_signal = signum
+
+
+def _shutdown_group() -> None:
     try:
         os.killpg(0, signal.SIGTERM)
     except ProcessLookupError:
@@ -46,7 +57,6 @@ def _forward_to_group(signum: int, _frame: object) -> None:
             os.killpg(0, signal.SIGKILL)
         except ProcessLookupError:
             pass
-    sys.exit(128 + signum)
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -54,13 +64,18 @@ def main(argv: list[str] | None = None) -> None:
     if not args:
         raise SystemExit("usage: pdeath_guard -- COMMAND [ARGS...]")
     _arm_pdeathsig()
+    signal.signal(signal.SIGTERM, _mark_stopped)
     if os.getppid() == 1:
         # 父进程在 prctl 之前已经退出：内核无法补发信号，自行触发清理。
-        _forward_to_group(signal.SIGTERM, None)
-    signal.signal(signal.SIGTERM, _forward_to_group)
+        _mark_stopped(signal.SIGTERM)
     global _child
     _child = subprocess.Popen(args)
-    sys.exit(_child.wait())
+    while _term_signal is None and _child.poll() is None:
+        time.sleep(0.05)
+    if _term_signal is None:
+        sys.exit(_child.wait())
+    _shutdown_group()
+    sys.exit(128 + _term_signal)
 
 
 if __name__ == "__main__":

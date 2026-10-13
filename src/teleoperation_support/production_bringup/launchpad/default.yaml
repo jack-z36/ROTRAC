@@ -9,8 +9,8 @@ commands:
   omnihand_o10_control: [ros2, run, omnihand_o10_control, o10_control_node]
 retargeting_params: "${DEXHIT_RETARGET_PARAMS:-runs/retargeting_diag_params.yaml}"
 env:
-  DEXHIT_COLLECTION_PREFIX: /home/hit/miniforge3/envs/dexhit_collection
-  OMNIHAND_O10_MODEL_FIXTURE: /home/hit/dexhit-external/omnihand_o10_fixture-f4fd0d913c2151bcb4be0d29fbc02761b9638009
+  DEXHIT_COLLECTION_PREFIX: /home/zh/桌面/project/ROTRAC/.venv
+  OMNIHAND_O10_MODEL_FIXTURE: /home/zh/桌面/project/ROTRAC/omnihand_o10_model
 parameters:
   rokoko_receiver:
     bind_address: 0.0.0.0

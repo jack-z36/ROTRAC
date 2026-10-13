@@ -16,8 +16,8 @@
 
 set -Eeuo pipefail
 
-COLLECTION_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-START_SCRIPT="$COLLECTION_ROOT/start_omnihand_control.sh"
+COLLECTION_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)"
+START_SCRIPT="$COLLECTION_ROOT/scripts/start_omnihand_control.sh"
 INSTALL_SETUP="$COLLECTION_ROOT/install/setup.bash"
 
 DEFAULT_EXPERIMENTS=(E0 E5 E1 E2 E3)
@@ -164,9 +164,9 @@ ensure_ros_env() {
     set +u
     source /opt/ros/jazzy/setup.bash >/dev/null 2>&1 || true
     source "$INSTALL_SETUP" >/dev/null 2>&1 || true
-    export DEXHIT_COLLECTION_PREFIX="${DEXHIT_COLLECTION_PREFIX:-/home/hit/miniforge3/envs/dexhit_collection}"
-    export OMNIHAND_O10_MODEL_FIXTURE="${OMNIHAND_O10_MODEL_FIXTURE:-/home/hit/dexhit-external/omnihand_o10_fixture-f4fd0d913c2151bcb4be0d29fbc02761b9638009}"
-    export PYTHONPATH="/home/hit/miniforge3/envs/dexhit_collection/lib/python3.12/site-packages${PYTHONPATH:+:$PYTHONPATH}"
+    export DEXHIT_COLLECTION_PREFIX="${DEXHIT_COLLECTION_PREFIX:-$COLLECTION_ROOT/.venv}"
+    export OMNIHAND_O10_MODEL_FIXTURE="${OMNIHAND_O10_MODEL_FIXTURE:-$COLLECTION_ROOT/omnihand_o10_model}"
+    export PYTHONPATH="$COLLECTION_ROOT/.venv/lib/python3.12/site-packages${PYTHONPATH:+:$PYTHONPATH}"
     set -u
 }
 

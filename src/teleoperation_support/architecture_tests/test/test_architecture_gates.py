@@ -15,7 +15,7 @@ import xml.etree.ElementTree as ET
 
 
 COLLECTION = Path(__file__).resolve().parents[3]
-WORKSPACE = COLLECTION.parents[1]
+WORKSPACE = COLLECTION.parents[0]
 SUPPORT = COLLECTION / "teleoperation_support"
 THIRD_PARTY = COLLECTION / "third_party"
 PACKAGE_ROOTS = {
@@ -463,7 +463,7 @@ def test_A19_vendor_prefix_is_external_install_artifact():
         for path in _python_files(package, include_tests=True):
             text = path.read_text(encoding="utf-8")
             if (
-                "src/collection/omni_hand/jazzy" in text
+                "src/collection/" in text
                 or "third_party/agillink_omnihand_sdk" in text
                 or "/jazzy/lib/" in text
             ):
@@ -596,7 +596,7 @@ def test_A26_node_directory_and_support_executable_roles():
 
 def test_A27_root_operator_scripts_keep_canonical_interfaces():
     expected = {
-        "init_omnihand.sh": "src/collection",
+        "init_omnihand.sh": 'COLLECTION_SRC="$COLLECTION_ROOT/src"',
         "start_omnihand_control.sh": (
             "teleoperation_support/production_bringup/scripts/"
             "start_omnihand_control.sh"
@@ -606,15 +606,15 @@ def test_A27_root_operator_scripts_keep_canonical_interfaces():
         "decode_rokoko_udp.sh": "[--port PORT] [--count N]",
     }
     for name, marker in expected.items():
-        path = WORKSPACE / name
+        path = WORKSPACE / "scripts" / name
         assert path.is_file(), f"missing root operator entry: {path}"
         assert path.stat().st_mode & 0o111, f"root operator entry is not executable: {path}"
         text = path.read_text(encoding="utf-8")
         assert marker in text, f"{name} lost command/path contract marker: {marker}"
         if name == "init_omnihand.sh":
-            # The new init detects and removes generated caches that still
-            # point at the deleted pre-migration source root.
-            assert text.count("/src/collection/omni_hand/") == 2
+            # The init detects and removes generated caches that still point
+            # at a pre-flattening source root (src/collection or older).
+            assert text.count("/src/collection/") == 2
             assert "stale_build_cache" in text
         else:
-            assert "src/collection/omni_hand" not in text
+            assert "src/collection" not in text

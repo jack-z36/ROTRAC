@@ -11,7 +11,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).parents[1]
 LAUNCHER = ROOT / "scripts" / "start_omnihand_control.sh"
-RIGHT_ONE_CLICK = ROOT.parents[3] / "start_omnihand_right_low_latency.sh"
+RIGHT_ONE_CLICK = ROOT.parents[2] / "scripts" / "start_omnihand_right_low_latency.sh"
 
 
 def _launcher_text() -> str:
@@ -62,4 +62,5 @@ def test_launcher_supports_explicit_post_start_tactile_rate():
 def test_right_one_click_starts_tactile_at_30_hz():
     text = RIGHT_ONE_CLICK.read_text(encoding="utf-8")
     assert "--sides right --tactile-rate 30" in text
-    assert "o10.right.request_interval_ms=30" in text
+    # 2026-10-04 低时延调整：触觉仍锁 30 Hz，SDK 全局请求间隔改为不限速（0）。
+    assert "o10.right.request_interval_ms=0" in text

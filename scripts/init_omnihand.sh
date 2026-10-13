@@ -4,20 +4,12 @@
 
 set -Eeuo pipefail
 
-COLLECTION_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-COLLECTION_SRC="$COLLECTION_ROOT/src/collection"
+COLLECTION_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)"
+COLLECTION_SRC="$COLLECTION_ROOT/src"
 ROS_DISTRO_NAME="${ROS_DISTRO:-jazzy}"
 ROS_SETUP="/opt/ros/$ROS_DISTRO_NAME/setup.bash"
-DEFAULT_NUMERIC_PYTHON="$COLLECTION_ROOT/../../dexhit_collection/bin/python"
-if [[ ! -x "$DEFAULT_NUMERIC_PYTHON" ]]; then
-    DEFAULT_NUMERIC_PYTHON="/home/hit/miniforge3/envs/dexhit_collection/bin/python"
-fi
-NUMERIC_PYTHON="${DEXHIT_COLLECTION_PYTHON:-$DEFAULT_NUMERIC_PYTHON}"
-DEFAULT_MODEL_FIXTURE="$COLLECTION_ROOT/../../omnihand_o10_fixture-f4fd0d913c2151bcb4be0d29fbc02761b9638009"
-if [[ ! -f "$DEFAULT_MODEL_FIXTURE/provenance.json" ]]; then
-    DEFAULT_MODEL_FIXTURE="/home/hit/dexhit-external/omnihand_o10_fixture-f4fd0d913c2151bcb4be0d29fbc02761b9638009"
-fi
-MODEL_FIXTURE="${OMNIHAND_O10_MODEL_FIXTURE:-$DEFAULT_MODEL_FIXTURE}"
+NUMERIC_PYTHON="${DEXHIT_COLLECTION_PYTHON:-$COLLECTION_ROOT/.venv/bin/python}"
+MODEL_FIXTURE="${OMNIHAND_O10_MODEL_FIXTURE:-$COLLECTION_ROOT/omnihand_o10_model}"
 NUMERIC_PREFIX="$(cd -- "$(dirname -- "$NUMERIC_PYTHON")/.." && pwd -P)"
 VENDOR_PREFIX="$COLLECTION_SRC/third_party/agillink_omnihand_sdk/linux/x64/ros2/jazzy"
 
@@ -87,7 +79,7 @@ while (($# > 0)); do
 done
 
 [[ -d "$COLLECTION_ROOT/.git" || -f "$COLLECTION_ROOT/.git" ]] \
-    || die "不是 Dexhit collection worktree: $COLLECTION_ROOT"
+    || die "不是 ROTRAC 仓库根: $COLLECTION_ROOT"
 for package_dir in "${PACKAGE_DIRS[@]}"; do
     [[ -f "$package_dir/package.xml" ]] || die "Collection package 目录不完整: $package_dir"
 done
@@ -169,11 +161,11 @@ if ((SKIP_BUILD == 0)); then
     for package in "${ALL_PACKAGE_NAMES[@]}"; do
         package_build="$COLLECTION_ROOT/build/$package"
         if [[ -L "$package_build/setup.py" ]] \
-            && [[ "$(readlink "$package_build/setup.py")" == *"/src/collection/omni_hand/"* ]]; then
+            && [[ "$(readlink "$package_build/setup.py")" == *"/src/collection/"* ]]; then
             stale_build_cache=1
         fi
         if [[ -f "$package_build/CMakeCache.txt" ]] \
-            && grep -Fq "/src/collection/omni_hand/" "$package_build/CMakeCache.txt"; then
+            && grep -Fq "/src/collection/" "$package_build/CMakeCache.txt"; then
             stale_build_cache=1
         fi
     done
@@ -243,7 +235,7 @@ cat <<EOF
 
 Next standard bringup command (not executed by init_omnihand.sh):
   cd $COLLECTION_ROOT
-  bash ./start_omnihand_control.sh
+  bash ./scripts/start_omnihand_control.sh
 
 注意：完整 bringup 会在目标和反馈就绪后驱动实体 O10；启动前必须按全流程手册完成安全确认。
 EOF
