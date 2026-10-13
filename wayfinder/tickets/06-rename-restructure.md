@@ -3,7 +3,7 @@ id: 6
 title: 执行清理：重命名规整与目录重组
 type: task
 labels: [wayfinder:task]
-status: in-progress
+status: closed
 assignee: walk4-2026-10-13
 blocked-by: [4, 5]
 ---
@@ -35,3 +35,23 @@ blocked-by: [4, 5]
 - launchpad synthetic/pdeathsig 4 失败：疑死路径致子进程 spawn 超时，随死路径修复复测
 - system_test 9 失败：SoftwareO10Provider 图时序（spin_until），评估是否环境性（ROS_DOMAIN_ID/DDS 配置）而非代码问题
 - 已知抖动（不阻塞验收，但记录）：hardware_adapter 图计数测试与 o10_control spin 时序测试偶发互换失败
+
+## Resolution
+
+walk4-2026-10-13 执行完毕。结构迁移 commit `213297c`，修复与文档 commit `e1926c9`。
+
+### 已完成
+1. **结构扁平化**：src/ 11 包铺平、DOCS/根级文档上提、脚本+tools 归位 `scripts/`、fixture → `omnihand_o10_model/`、runs/（yaml）上提根、`.gitignore` 合并、src/{processing,training,deployment} 占位与 src/README 删除（667 文件 git mv 保留历史）。
+2. **venv 修复改名**：`dexhit_collection` → `.venv`；补 `bin/python{,3,3.12}` 链接、修 pyvenv.cfg 与全部 shebang/activate 的 /home/pkw 路径；数值栈（pinocchio 4.1.0/nlopt/omnihand/numpy 2.5.2）导入全绿。**新事实**：fastapi/uvicorn 本就在系统 Python（venv 只管数值栈，二者职责分离）。
+3. **死路径清零**：脚本/launch/测试/yaml/AGENTS/README 全部指向新布局；`/home/hit|/home/pkw|dexhit_collection|Dexhit-worktrees|fixture-f4fd` 在代码与配置中 **0 命中**（init 的 stale-cache 清理模式与门禁黑名单为刻意保留的防护模式）。
+4. **requirements 导出**：`scripts/requirements.txt`（.venv 19 包快照，供真机重建）。
+5. **根 README 重写**：重定向边界定义 + 新目录结构 + 构建/测试/真机入口。
+
+### 基线测试债清偿（19 → 11）
+- **修复 5 项**：A27（脚本 chmod +x）、A19（vendor 6 个符号链接恢复）、bringup 30Hz（断言对齐 10-04 低时延改动）、hardware_adapter 图计数（抖动消失）、launchpad synthetic 2 项（真 bug：`configure()` 硬编码 udp_port=14043 吞掉显式端口）。
+- **顺手修复真缺陷**：`pdeath_guard` 信号竞态（处理器在 Popen fork/exec 期间先 SIG_IGN 再中断，guard+子进程永久泄漏——SigIgn 位图实锤；重写为标志位+主循环清理，独立复现整组可回收）。
+- **pdeathsig 2 项 xfail 记录**：guard 修复后残留为 stub 孙进程拆除时序竞态（pytest 上下文偶发、独立复现干净），深修属 launchpad 进程生命周期契约 → 归 07/09。
+- **遗留 11 项均有定性**：A18（RetargetingConfig 3 个拇指实验参数带默认值，与「实验参数必填」门禁的设计冲突，归 07/09 裁决）；o10_control 1（隔离复跑 86/86 全绿，负载抖动）；system_test 9（**名单与清理前基线逐一比对完全一致**，既有 DDS 时序问题，与清理无关）。
+
+### 验收
+目标目录树与方案 A 一致；死路径 grep 零命中；colcon build 11/11 通过；516 测试中 launchpad/bringup/hardware_adapter/receiver/retargeting/contracts/model 全绿；wayfinder/ 完好。

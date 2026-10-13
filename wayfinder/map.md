@@ -29,6 +29,7 @@
 - [建立安全网：全量备份与 git 初始化](tickets/03-safety-net-git-backup.md)：备份 `~/backups/ROTRAC-20261013.tar.zst`（123M，30670 条目全数校验，sha256 bef3df0b…70904）；git 仓库建立（main 分支，initial commit 34956ba，846 文件含 vendor SDK）；两个失效 worktree .git 指针已移除；发现 collection 自带 .gitignore 已整体排除 runs/（含 yaml 配置文件），其去留并入票据 04。
 - [确认清理范围、删除清单与命名规范](tickets/04-cleanup-scope-grilling.md)：7 轮 grilling 定稿三列清单与**方案 A 扁平化布局**；本机定位 = 代码落地 + pytest 测试（不做真机联调），交付物 = 干净代码仓库；venv 就地修复改名 `.venv/`；runs 录制数据移出归档、活参数 yaml 纳入 git；8 类删除项全删；**本图只管 ROTRAC**——睿尔曼/vive 代码在兄弟目录，用户自行处理。
 - [执行清理：删除无关代码与目录](tickets/05-execute-deletion.md)：归档 81M 录制至 `~/backups/ROTRAC-runs-archive/`；yaml 纳管（595bc8e）；processing/skills/agent配置/rokoko_test.py 分三 commit 删除；node_modules/构建产物/缓存 rm；仓库 650M→509M；**对照实验证明删除零测试回归**（17 个基线失败为迁移旧病，清单已移交票据 06）；venv 依赖经 addsitedir 验证完好（cmeel.pth 机制）。
+- [执行清理：重命名规整与目录重组](tickets/06-rename-restructure.md)：方案 A 扁平化落地（213297c：src 铺平/脚本归位/fixture 改名 omnihand_o10_model/文档上提/gitignore 合并）；venv 就地修复改名 `.venv`（数值栈全绿，Web 栈确认为系统 Python 职责）；死路径零命中；README 重写+requirements 导出；测试 19→11：顺手修复 launchpad 两个真缺陷（udp_port 吞参数、pdeath_guard 信号竞态泄漏），遗留 11 项全部定性（A18 设计冲突与 pdeathsig 孙进程竞态归 07/09；system_test 9 项名单与基线一致；o10_control 1 项为负载抖动）。
 
 ## Not yet specified（雾区）
 
