@@ -26,3 +26,12 @@ blocked-by: [4, 5]
 6. **自检（本机无硬件口径）**：colcon build（根为 workspace）+ 全部 pytest + architecture_tests 通过。
 
 验收：目标目录树与票据 04 方案 A 一致；死路径 grep 零命中；自检全绿；`wayfinder/` 完好。
+
+### 基线测试债（票据 05 对照实验确认的 17 个迁移旧病，修复后须转绿）
+- `chmod +x` 全部运维脚本（A27：init_omnihand.sh 现为 0644）
+- 恢复 vendor `third_party/…/lib/libusb-1.0.so` 符号链接（A19，应指向同目录 libusb-1.0.so.x）
+- 查明 A18 experimental parameters 门禁失败原因并修复
+- bringup `test_right_one_click_starts_tactile_at_30_hz`：脚本 10-4 修改后与测试断言漂移，二选一对齐
+- launchpad synthetic/pdeathsig 4 失败：疑死路径致子进程 spawn 超时，随死路径修复复测
+- system_test 9 失败：SoftwareO10Provider 图时序（spin_until），评估是否环境性（ROS_DOMAIN_ID/DDS 配置）而非代码问题
+- 已知抖动（不阻塞验收，但记录）：hardware_adapter 图计数测试与 o10_control spin 时序测试偶发互换失败
