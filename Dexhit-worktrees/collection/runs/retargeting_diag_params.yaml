@@ -1,0 +1,17 @@
+/**:
+  ros__parameters:
+    palm_y_epsilon: 0.000001
+    palm_x_epsilon: 0.000001
+    finger_length_epsilon: 0.000001
+    length_window_size: 3
+    stable_window_count: 2
+    length_nmad_thresholds: [0.01, 0.01, 0.01, 0.01, 0.01]
+    frozen_length_relative_thresholds: [0.10, 0.10, 0.10, 0.10, 0.10]
+    ik_residual_thresholds: [0.05, 0.05, 0.05, 0.05, 0.05]
+    ik_max_evaluations: 100
+    ik_max_time_sec: 0.02
+    smooth_time_constants: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
+    thumb_roll_sensitivity: 1.0
+    stale_timeout_sec: 0.5
+    recovery_min_valid_frames: 3
+    recovery_min_duration_sec: 0.1

@@ -40,7 +40,9 @@ htmlcov/
 /datasets/
 /models/
 /artifacts/
-/runs/
+# runs/ 录制数据不入库（已归档至仓库外）；仅保留活参数文件
+/runs/*
+!/runs/retargeting_diag_params.yaml
 /logs/
 # Per-package runtime artifact directories (e.g. launchpad test recordings)
 src/**/runs/
