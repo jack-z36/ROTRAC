@@ -26,6 +26,7 @@
 
 - [盘点重定向数据链路](tickets/01-pipeline-inventory.md)：链路 = receiver(UDP 14043) → hand_retargeting(归一化+单指IK) → o10_control(限速/状态机) → hardware_provider(Agilink SDK/HCAN)；换手耦合点集中在五处：contracts.joints、MJCF 耦合、URDF 几何、backends.py（唯一 `from omnihand import` 触点）、拇指专调；整树无版本控制。
 - [仓库全量清点与分类](tickets/02-repo-census.md)：全库 ~724M，核心代码仅 ~6M；大头是 venv 481M、node_modules 107M、runs 录制 79M、colcon 产物 31M；明确删除候选 8 类，待定项 5 类（runs 数据、venv、skills、历史文档、诊断工具）；"Dexhit"是项目名不是另一只手。
+- [建立安全网：全量备份与 git 初始化](tickets/03-safety-net-git-backup.md)：备份 `~/backups/ROTRAC-20261013.tar.zst`（123M，30670 条目全数校验，sha256 bef3df0b…70904）；git 仓库建立（main 分支，initial commit 34956ba，846 文件含 vendor SDK）；两个失效 worktree .git 指针已移除；发现 collection 自带 .gitignore 已整体排除 runs/（含 yaml 配置文件），其去留并入票据 04。
 
 ## Not yet specified（雾区）
 
