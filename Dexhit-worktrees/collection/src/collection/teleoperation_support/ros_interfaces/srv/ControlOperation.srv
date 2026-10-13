@@ -1,0 +1,18 @@
+# ControlOperation — request/response type for clear_fault. Wire contract: DOCS/01_知识/07_O10操作者控制操作ROS接口契约.md.
+# The request is empty; the service name identifies the operation and side.
+---
+uint8 CLEAR_FAULT_SUCCESS=30
+uint8 CLEAR_FAULT_ALREADY_CLEAR=31
+uint8 CLEAR_FAULT_REJECTED_CONTROL_STATE=40
+uint8 CLEAR_FAULT_REJECTED_COMMUNICATION_UNHEALTHY=41
+uint8 CLEAR_FAULT_REJECTED_ERROR_QUERY_TIMEOUT=42
+uint8 CLEAR_FAULT_REJECTED_ERROR_STATUS_INVALID=43
+uint8 CLEAR_FAULT_REJECTED_HARDWARE_ERROR_PRESENT=44
+uint8 CLEAR_FAULT_REJECTED_FEEDBACK_READ_TIMEOUT=45
+uint8 CLEAR_FAULT_REJECTED_FEEDBACK_INVALID=46
+uint8 CLEAR_FAULT_REJECTED_LIMITER_INIT_FAILED=47
+
+bool success
+uint8 result_code
+string message
+rokoko_omnihand_msgs/O10ControlState state

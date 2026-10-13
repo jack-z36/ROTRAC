@@ -1,0 +1,25 @@
+# ===== ROTRAC 根 .gitignore（票据 03 建立，临时口径）=====
+# 原则：排除「可再生/待裁决」的大体量内容；源代码、文档、配置、wayfinder/ 全部入库。
+# runs/ 的最终去留由 wayfinder 票据 04 裁决，venv 同理。
+
+# Python 运行环境（481M venv，票据 04 裁决去留）
+/dexhit_collection/
+
+# 前端依赖与构建产物（npm install / vite build 再生）
+node_modules/
+web/dist/
+
+# colcon 构建产物与日志
+build/
+install/
+log/
+
+# Python 缓存
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# 录制数据（79M，票据 04 裁决；保留其中的 yaml 配置文件）
+runs/**
+!runs/**/
+!runs/**/*.yaml

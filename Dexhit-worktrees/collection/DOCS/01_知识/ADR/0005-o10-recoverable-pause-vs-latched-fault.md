@@ -1,0 +1,25 @@
+---
+status: accepted
+---
+
+# 区分可自动恢复暂停与锁存控制故障
+
+O10 控制链对每个逻辑手侧区分可自动恢复暂停和锁存控制故障。Rokoko stale、人体掌坐标退化、单指输入/IK 失败以及单条非法上游目标属于输入或重定向层暂时问题，不自动证明 O10 硬件已经失去安全可信度；系统停止相应新命令或保持失败手指目标，但保留既有操作者授权，满足恢复契约后允许有界自动恢复。
+
+厂商 O10 任一关节任一错误位非零、命令后位置回读超时、非法硬件反馈、控制安全门内部不变量失效，以及控制节点、硬件 Adapter 或设备连接重启/断开，均属于锁存故障。进入锁存故障时立即撤销该侧操作者授权并停止新命令，另一侧独立运行。
+
+锁存故障不能因错误信号短暂消失而自动清除。操作者必须显式请求清除；当前错误必须为零、通信必须健康，并且硬件 Adapter 必须独立读取一帧新鲜合法的真实主动关节状态以重新初始化硬限制器。清除成功后仍保持未使能，操作者必须再次显式使能。
+
+Phase 1 对 `stalled`、`overheat`、`over_current`、`motor_except` 和 `commu_except` 全部采用保守锁存策略。厂商错误状态是触发式读取，正式实现必须主动轮询并定义频率和超时。命令—反馈跟踪误差暂不作为故障依据，直至确认 `joint_states` 的物理测量语义。
+
+## 修订：`commu_except` 不作为锁存故障依据
+
+依据官方 Agilink OmniHand SDK（`agillink_omnihand_sdk` 仓库测试套件 `test_omnihand_2025.py`）对错误位的权威说明：
+
+> “X (Communication exception) may indicate historical communication errors. This is normal if the device had previous communication timeouts.”
+
+即厂商错误字 bit4（`commu_except`）表示**历史通信异常标记**，不反映当前硬件故障，且**不阻止厂商侧控制**。因此控制侧将 bit4 从“锁存 `HARDWARE_ERROR` 故障”的判定中排除：只有 bit0–bit3（`stalled`、`overheat`、`over_current`、`motor_except`）任一非零才锁存故障；`hardware_error_bits` 仍保留原始错误字（含 bit4）用于诊断，`clear_fault` 的错误检查同样忽略 bit4。该修订不影响其他锁存依据（回读超时、非法反馈、安全不变量、组件重启/断开、错误监控超时）。
+
+## 修订：`arm`/`disarm` 门控已移除
+
+commit `4fedfaa`（2026-08-19）把操作者 `armed`/`arm`/`disarm` 门控整体移除，运动由新鲜合法软目标直接驱动（对齐官方 Agilink SDK 直控行为）。因此本文正文中“保留既有操作者授权”“撤销该侧操作者授权”“清除成功后必须再次显式使能”等表述只反映门控存在时的历史语义；**可自动恢复暂停与锁存故障的区分依然成立**：stale/退化/IK 失败属可自动恢复暂停，错误位/回读超时/非法反馈/重启断连属锁存故障，锁存后必须经 `clear_fault` 且不会自动恢复。`motion_enabled` 语义同见 O10 控制契约。
