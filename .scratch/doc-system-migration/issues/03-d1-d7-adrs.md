@@ -4,8 +4,12 @@
 
 **Blocked by:** 01 结构搬迁与归档建账
 
-**Status:** in-progress（2026-10-15 认领，子代理执行中）
+**Status:** resolved（2026-10-15）
 
-- [ ] D1–D8 八项裁定中实质性的 D1–D7（模块形态、wire 保守平行 topic、per-hand contracts 包、拇指专调配置化、触觉/诊断/Launchpad）全部 ADR 化；D8（spec 文档位置）已随迁移消化，无需 ADR
-- [ ] 编号衔接旧 ADR，不冲突
-- [ ] 每份 ADR 过三条件自检：不可逆 + 反直觉 + 真权衡
+- [x] D1–D8 八项裁定中实质性的 D1–D7 全部 ADR 化（0014–0020）；D8（spec 文档位置）已随迁移消化，无需 ADR
+- [x] 编号衔接旧 ADR（0013 → 0014 起），INDEX.md 已登记
+- [x] 每份 ADR 过三条件自检：不可逆 + 反直觉 + 真权衡
+
+## Answer
+
+子代理产出七份 ADR，素材取自 v2 设计终稿、7.2 待决策清单、票 12 Further Notes 与 7.1 业界调研，沿用库内房式（背景/备选/裁定/后果）。三条件自检如实：0017（拇指专调）不可逆性偏弱，价值在真机验证值的行为出处与溯源；0020（Launchpad 数据驱动）三条件满足但赌注最低；其余五份扎实。子代理另报 `init_omnihand.sh` 构建失败——即已知 CJK 路径债（`.scratch/build-baseline-fix/issues/01`），与本票无关。

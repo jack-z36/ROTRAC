@@ -15,3 +15,10 @@
 - [Launchpad 真机与 system_test 编排边界](0011-launchpad-real-hardware-test-boundary.md)：真机模式禁止编排配置引用 `system_test`；mock 模式允许复用纯软件 Provider 与场景生成器。
 - [Launchpad 作为设备编排层](0012-launchpad-device-orchestration-layer.md)：Launchpad 位于控制面最外层，按模式选择业务包和替身 Provider，业务包不得反向依赖 Launchpad。
 - [Collection 源码按生产节点优先组织](0013-collection-production-node-first-source-layout.md)：顶层只展示五个生产期节点，并将接口、模型、bringup、测试和第三方运行时隔离到显式支撑目录。
+- [换手适配模块以 support 包承载并增设独立标准适配节点](0014-hand-swap-adapter-support-packages-and-standard-adapter-node.md)：HandProfile/HandAdapter 能力收进 `teleoperation_support/` 支撑包由业务节点注入，仅 22 DoF 双向转换是独立节点。
+- [层间 wire 采用保守平行 topic 与统一 22 DoF 标准面](0015-conservative-parallel-topic-wire-with-22dof-standard-surface.md)：每手 `hand_id` 前缀平行 topic 族保持固定名自校验，`/observation` 22 DoF（未激活 NaN）为跨手统一契约。
+- [关节契约按手单 owner 落在 per-hand contracts 包或配置](0016-per-hand-joint-contract-single-owner.md)：O10 事实留在 `omnihand_o10_contracts`，新手建 `{hand_id}_contracts` 包或配置承载，A11 门禁改写为逐手唯一 owner。
+- [拇指专调保留为配置化的可选逐指调整](0017-thumb-adjustments-as-optional-per-finger-config.md)：真机验证的拇指补偿移入 `RetargetingConfig` 逐指钩子，O10 携带现值，新手缺省无此行为。
+- [触觉 Port 保留为只读可选能力](0018-tactile-port-optional-read-only-capability.md)：只读不进安全原则通用化，无触觉的 HandAdapter 返回 `NOT_SUPPORTED`。
+- [诊断消息继承结构骨架、O10 专属字段按手参数化](0019-diagnostics-skeleton-fixed-fields-parameterized-per-hand.md)：逐侧/事件驱动/只读骨架跨手固定，残差、错误位等字段维度与语义按手声明。
+- [Launchpad 方块同构替换、内容数据驱动](0020-launchpad-blocks-isomorphic-replacement-data-driven.md)：方块与节点一一对应不变，provider 命名、关节曲线与录制清单由 per-hand 编排配置驱动。
