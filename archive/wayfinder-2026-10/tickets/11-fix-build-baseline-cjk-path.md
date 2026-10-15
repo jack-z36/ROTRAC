@@ -3,10 +3,12 @@ id: 11
 title: 修复中文路径下的构建失败，恢复链路自检
 type: grilling
 labels: [wayfinder:grilling]
-status: open
+status: superseded
 assignee:
 blocked-by: []
 ---
+
+> 收口注记（2026-10-15）：工作移交 `.scratch/build-baseline-fix/issues/01`（根因与候选方案已随文迁移）。
 
 ## Question
 

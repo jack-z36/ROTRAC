@@ -6,6 +6,6 @@
 
 **Status:** ready-for-agent
 
-- [ ] D1–D7 八项裁定（模块形态、wire 保守平行 topic、per-hand contracts 包、拇指专调配置化、触觉/诊断/Launchpad）全部 ADR 化
+- [ ] D1–D8 八项裁定中实质性的 D1–D7（模块形态、wire 保守平行 topic、per-hand contracts 包、拇指专调配置化、触觉/诊断/Launchpad）全部 ADR 化；D8（spec 文档位置）已随迁移消化，无需 ADR
 - [ ] 编号衔接旧 ADR，不冲突
 - [ ] 每份 ADR 过三条件自检：不可逆 + 反直觉 + 真权衡

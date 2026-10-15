@@ -3,10 +3,12 @@ id: 10
 title: 架构 Spec 撰写、评审与定稿
 type: task
 labels: [wayfinder:task]
-status: open
+status: superseded
 assignee:
 blocked-by: [9]
 ---
+
+> 收口注记（2026-10-15）：工作移交 `.scratch/hand-swap/issues/01`（spec 已由票 12 直接产出，原 08/09 前置链作废）。
 
 ## Question
 

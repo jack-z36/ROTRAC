@@ -3,10 +3,12 @@ id: 12
 title: 灵巧手换手架构 Spec（22 DoF 标准适配）
 type: task
 labels: [wayfinder:spec]
-status: open
+status: closed
 assignee:
 blocked-by: [7]
 ---
+
+> 收口注记（2026-10-15）：spec 已产出并迁至 `.scratch/hand-swap/spec.md`；评审定稿移交 `.scratch/hand-swap/issues/01`。
 
 ## Problem Statement
 

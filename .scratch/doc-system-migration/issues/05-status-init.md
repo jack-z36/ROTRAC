@@ -4,8 +4,12 @@
 
 **Blocked by:** 01 结构搬迁与归档建账
 
-**Status:** ready-for-agent
+**Status:** resolved（2026-10-15）
 
-- [ ] `STATUS.md` 三节结构落地，内容以 2026-10 真实状态为准
-- [ ] 不含过程叙事（"X 已完成"类内容指向票据）
-- [ ] 雾区待办行存在
+- [x] `STATUS.md` 三节结构落地，内容以 2026-10 真实状态为准
+- [x] 不含过程叙事（"X 已完成"类内容指向票据）
+- [x] 雾区待办行存在
+
+## Answer
+
+`STATUS.md` 初建。事实来源：wayfinder map.md Decisions（2026-10 真实进展）+ 旧 00_当前状态.md（2026-08/09 能力事实，过期叙述如 branch `collection` 工作树边界未带入）。旧 00_当前状态 留在 old-docs 归档区。

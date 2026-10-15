@@ -3,10 +3,12 @@ id: 7
 title: 换手适配器架构设计
 type: task
 labels: [wayfinder:task]
-status: in-progress
+status: closed
 assignee: session-2026-01-15
 blocked-by: []
 ---
+
+> 收口注记（2026-10-15）：设计与八项裁定（D1–D8）已完成，结论见 map.md Decisions 与 research/07-hand-adapter-architecture-design-final.md；spec 已产出 → `.scratch/hand-swap/spec.md`；D1–D8 的 ADR 化见 `.scratch/doc-system-migration/issues/03`。
 
 ## Task
 
