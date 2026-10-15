@@ -13,12 +13,13 @@
 
 ## Notes（约定）
 
-- 领域：灵巧手遥操作重定向。链路真身在 `Dexhit-worktrees/collection/`（ROS 2 Jazzy，11 个 ament_python 包，六边形架构）；仓库根其余多为 venv / 模型资产 / 文档。详见 [research/01](research/01-pipeline-inventory.md)、[research/02](research/02-repo-census.md)。
+- 领域：灵巧手遥操作重定向。链路真身自票据 06 起扁平化为**仓库根 = ROS workspace**（`src/` 下 11 个 ament 包）；[research/01](research/01-pipeline-inventory.md)、[research/02](research/02-repo-census.md) 写于扁平化之前，其中 `Dexhit-worktrees/collection/` 前缀路径已失效，读时自行换算。
+- **架构设计北极星**：尽可能减少更换灵巧手硬件带来的工作量。方法论 = 识别数据流中"硬件绑定"vs"硬件无关"模块 → 重新聚合边界 → 定义规范接口。
 - 本 effort **覆盖** wayfinder「只决策不执行」的默认：`task` 类票据直接落地执行两大任务本身。
 - 探索/只读侦察一律交给 subagent（file-scout / Explore），主会话只做高层决策与写盘；**subagent 不可用则暂停并向用户报告**（用户明令）。
 - HITL 票（grilling/prototype）必须与用户真人对话完成，agent 不得代替用户作答。
 - 每个 session 最多解决一张票（research 类除外）；session 开场先读本 map。
-- 决策类票建议调用 Skill：`grilling` + `domain-modeling`；原型票：`prototype`；09 可参考 `implement-spec`。
+- 决策类票建议调用 Skill：`grilling` + `domain-modeling`；原型票：`prototype`。
 - `wayfinder/` 目录受保护，任何清理任务不得删除或移动。
 - 全程中文。
 
@@ -29,13 +30,15 @@
 - [建立安全网：全量备份与 git 初始化](tickets/03-safety-net-git-backup.md)：备份 `~/backups/ROTRAC-20261013.tar.zst`（123M，30670 条目全数校验，sha256 bef3df0b…70904）；git 仓库建立（main 分支，initial commit 34956ba，846 文件含 vendor SDK）；两个失效 worktree .git 指针已移除；发现 collection 自带 .gitignore 已整体排除 runs/（含 yaml 配置文件），其去留并入票据 04。
 - [确认清理范围、删除清单与命名规范](tickets/04-cleanup-scope-grilling.md)：7 轮 grilling 定稿三列清单与**方案 A 扁平化布局**；本机定位 = 代码落地 + pytest 测试（不做真机联调），交付物 = 干净代码仓库；venv 就地修复改名 `.venv/`；runs 录制数据移出归档、活参数 yaml 纳入 git；8 类删除项全删；**本图只管 ROTRAC**——睿尔曼/vive 代码在兄弟目录，用户自行处理。
 - [执行清理：删除无关代码与目录](tickets/05-execute-deletion.md)：归档 81M 录制至 `~/backups/ROTRAC-runs-archive/`；yaml 纳管（595bc8e）；processing/skills/agent配置/rokoko_test.py 分三 commit 删除；node_modules/构建产物/缓存 rm；仓库 650M→509M；**对照实验证明删除零测试回归**（17 个基线失败为迁移旧病，清单已移交票据 06）；venv 依赖经 addsitedir 验证完好（cmeel.pth 机制）。
-- [执行清理：重命名规整与目录重组](tickets/06-rename-restructure.md)：方案 A 扁平化落地（213297c：src 铺平/脚本归位/fixture 改名 omnihand_o10_model/文档上提/gitignore 合并）；venv 就地修复改名 `.venv`（数值栈全绿，Web 栈确认为系统 Python 职责）；死路径零命中；README 重写+requirements 导出；测试 19→11：顺手修复 launchpad 两个真缺陷（udp_port 吞参数、pdeath_guard 信号竞态泄漏），遗留 11 项全部定性（A18 设计冲突与 pdeathsig 孙进程竞态归 07/09；system_test 9 项名单与基线一致；o10_control 1 项为负载抖动）。
+- [执行清理：重命名规整与目录重组](tickets/06-rename-restructure.md)：方案 A 扁平化落地（213297c：src 铺平/脚本归位/fixture 改名 omnihand_o10_model/文档上提/gitignore 合并）；venv 就地修复改名 `.venv`（数值栈全绿，Web 栈确认为系统 Python 职责）；死路径零命中；README 重写+requirements 导出；测试 19→11：顺手修复 launchpad 两个真缺陷（udp_port 吞参数、pdeath_guard 信号竞态泄漏），遗留 11 项全部定性（A18 设计冲突与 pdeathsig 孙进程竞态归 07；system_test 9 项名单与基线一致；o10_control 1 项为负载抖动）。
+- [换手适配器架构设计](tickets/07-data-flow-hardware-binding.md)：基于 7.1（业界调研 ros2_control/MoveIt/Drake）与 7.2（约束盘点 22 组继承/10 项替换/8 项待决），完成四层架构设计（手套/中段/控制/硬件）+ HandProfile/HandAdapter 接口签名 + 中段去耦方案（依赖注入、删除 21 节点镜像）+ 配置收口（统一 YAML）+ 换手清单三列表；8 个关键决策全部裁定（D1 模块形态=support 包、D2 wire 保守平行 topic、D3 per-hand contracts 包、D4 拇指专调配置化、D5-D7 触觉/诊断/Launchpad）；实施路线图 5 阶段；完整设计见 [research/07-hand-adapter-architecture-design-final.md](research/07-hand-adapter-architecture-design-final.md)（v2 修订版，对齐 22 DoF 团队规范）。
+- [灵巧手换手架构 Spec（完整版）](tickets/12-hand-swap-architecture-spec.md)：基于票据 07 设计，生成完整的架构 spec，包含 47 条用户故事、17 个实施决策、10 个测试决策；**核心改进**：(1) 统一 22 DoF 标准接口（符合团队架构规范）、(2) 独立的 hand_standard_adapter Node（解耦重定向与控制层）、(3) HandAdapter 内部处理维度转换（控制层完全手无关）；换手工作量：只需编写配置文件（~80 行 YAML）+ HandAdapter 实现（~150 行代码）；架构文档已生成至 [ARCHITECTURE.md](../ARCHITECTURE.md)（含完整 ASCII 数据流图）。
 
 ## Not yet specified（雾区）
 
 - **按 spec 实施代码迁移**：票据 10（spec 定稿）后才能细化，且大概率作为全新 effort 另开新图，不在本图内毕业。
 - **第二只灵巧手选型与 SDK 资料收集**：用于实证「只改适配层」的承诺是否成立，引入时机未定。
-- **DOCS 文档体系归并**：现有 DOCS/03_工程/01_Spec、交接文档与新 spec 的关系，待票据 07/09 后才清晰。
+- **DOCS 文档体系归并**：现有 DOCS/03_工程/01_Spec、交接文档与新 spec 的关系，待票据 10 后才清晰。
 
 ## Out of scope（范围外）
 

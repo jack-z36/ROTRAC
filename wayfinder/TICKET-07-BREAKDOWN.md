@@ -93,8 +93,8 @@ wayfinder --map hand-adapter-architecture
 
 | ID | 标题 | 类型 | 依赖 | 状态 |
 |----|------|------|------|------|
-| 7.1 | 业界手适配器设计调研 | research | 无 | open |
-| 7.2 | 现有 spec 约束盘点 | research | 无 | open |
+| 7.1 | 业界手适配器设计调研 | research | 无 | closed |
+| 7.2 | 现有 spec 约束盘点 | research | 无 | closed |
 | 7.3 | 手套侧契约冻结决策 | grilling | 无 | open |
 | 7.4 | HandAdapter 接口原型 | prototype | 7.1 | open |
 | 7.5 | 中段去耦策略定案 | grilling | 7.4 | open |

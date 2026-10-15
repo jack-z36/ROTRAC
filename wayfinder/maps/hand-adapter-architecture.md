@@ -26,12 +26,11 @@
 ## Tickets（票据列表）
 
 ### 可立即启动（frontier，无依赖）
-- [7.1 现有架构模式调研：业界手适配器设计](../tickets/07.1-hand-adapter-survey.md) - **research**，可并行
-- [7.2 盘点现有 spec 约束与不变量](../tickets/07.2-existing-spec-constraints.md) - **research**，可并行
 - [7.3 手套侧契约冻结决策](../tickets/07.3-glove-contract-decision.md) - **grilling**，需 HITL
+- [7.4 HandProfile/HandAdapter 接口原型](../tickets/07.4-hand-adapter-prototype.md) - **prototype**，HITL，已随 7.1 关票解锁
 
 ### 依赖关系（按拓扑排序）
-- [7.4 HandProfile/HandAdapter 接口原型](../tickets/07.4-hand-adapter-prototype.md) - **prototype**，blocked by 7.1
+- [7.4 HandProfile/HandAdapter 接口原型](../tickets/07.4-hand-adapter-prototype.md) - **prototype**，blocked by 7.1（已解锁）
 - [7.5 中段去耦策略定案](../tickets/07.5-middle-layer-decoupling.md) - **grilling**，blocked by 7.4
 - [7.6 配置单一来源收口决策](../tickets/07.6-config-consolidation.md) - **grilling**，blocked by 7.4, 7.5
 - [7.7 绘制模块边界图](../tickets/07.7-draw-boundary-diagram.md) - **task**，blocked by 7.3, 7.4, 7.5
@@ -64,11 +63,12 @@
 
 ## Decisions so far（已决索引）
 
-<!-- 随票据解决逐步填充 -->
+- [现有架构模式调研：业界手适配器设计](../tickets/07.1-hand-adapter-survey.md)：ros2_control（lifecycle+read/write+URDF 声明插件+pluginlib）/ MoveIt 2（ControllerManager 抽象+YAML 控制器清单+SRDF 语义组）/ Drake（driver 只接线、controller 做语义翻译）三大先例；关键事实：URDF mimic 与 MJCF tendon 均只支持线性耦合，本项目非线性多项式需自定义扩展；dex-retargeting per-hand YAML 是"换手只换配置"最贴近先例；13 条模式→耦合点对照表供 7.4/7.5/7.6 取用。全文见 [research/07.1](../research/07.1-hand-adapter-survey.md)
+- [盘点现有 spec 约束与不变量](../tickets/07.2-existing-spec-constraints.md)：权威其实是 `DOCS/03_工程/01_Rokoko…Spec.md`+`08_Launchpad…Spec.md` 与 `DOCS/01_知识/ARCHITECTURE.md` 的 A01–A27（票据原注的 01_Spec 目录与 A11/A12 含义均纠偏）；约束三档分类 = 必须继承 22 组 / 可取代 10 项 / 待决策 D1–D8（关键：模块边界 vs A20/A25 门禁、wire 契约 10 维泛化）；12 耦合点中 7 个被成文锁定、4 个属约定俗成（→ 7.5/7.6 直接标的）。全文见 [research/07.2](../research/07.2-existing-spec-constraints.md)
 
 ## Not yet specified（雾区）
 
-- **与现有 spec 的继承关系细化**：DOCS/03_工程/01_Spec 与 CONTEXT.md A11/A12 不变量的具体继承或取代决策，需等核心接口设计明确后才能判断
+- **与现有 spec 的继承关系细化**：已由票据 7.2 盘点出待决策清单 D1–D8（见 [research/07.2](../research/07.2-existing-spec-constraints.md)），其中 D1（模块边界 vs A20/A25 门禁）、D2（wire 契约维度泛化）将在 7.4/7.5/7.6 中裁决；其余 D 项随相应票据处理
 - **第二只手的实证验证**：设计是否真正支持"只改少数模块"，需引入第二只手 SDK 验证（时机未定）
 
 ## Out of scope（范围外）

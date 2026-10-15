@@ -1,8 +1,8 @@
 ---
 id: 10
-title: spec 对抗性评审与定稿
-type: grilling
-labels: [wayfinder:grilling]
+title: 架构 Spec 撰写、评审与定稿
+type: task
+labels: [wayfinder:task]
 status: open
 assignee:
 blocked-by: [9]
@@ -10,7 +10,7 @@ blocked-by: [9]
 
 ## Question
 
-对票据 09 产出的 spec 做定稿前的压力测试，修复问题后与用户一起定稿——本图的终点票。
+基于票据 07/08/09 的决策，撰写完整的架构 spec 文档，经对抗性评审修复问题后与用户一起定稿——本图的终点票。
 
 要求：
 

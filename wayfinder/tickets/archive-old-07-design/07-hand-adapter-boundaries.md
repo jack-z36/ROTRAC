@@ -3,8 +3,8 @@ id: 7
 title: 确定换手适配的模块边界与接口契约
 type: grilling
 labels: [wayfinder:grilling]
-status: open
-assignee:
+status: in-progress
+assignee: session-2026-01-xx
 blocked-by: [1]
 ---
 
