@@ -1,6 +1,6 @@
 # Collection 第三方运行时
 
-本目录只存放未经 Dexhit 修改的第三方运行时，不存放 Collection 业务源码。根目录的 `COLCON_IGNORE` 保证 `colcon --base-paths src/collection` 不会把 vendor 安装空间识别为本仓库源码包。
+本目录只存放未经 Dexhit 修改的第三方运行时，不存放 Collection 业务源码。本目录的 `COLCON_IGNORE` 保证仓库根 workspace 的 colcon 扫描不会把 vendor 安装空间识别为本仓库源码包。
 
 当前固定依赖：
 

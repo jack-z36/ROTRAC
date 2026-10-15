@@ -23,6 +23,7 @@ Single-context: `CONTEXT.md` at the repo root + `docs/adr/`. See `docs/agents/do
 - 稳定知识与手册在 [docs/](docs/)：架构边界、接口语义、算法基线、启动手册、真机前置条件
 - 架构决策查 [docs/adr/](docs/adr/)；结论与 ADR 冲突时显式指出，不得静默覆盖
 - [CODING_STANDARDS.md](CODING_STANDARDS.md) 只在 code review 阶段读，实现阶段不占上下文
+- 写任何 .md 前先读 [skills/doc-writing/SKILL.md](skills/doc-writing/SKILL.md)（落点判定树；写错位置会被 hook 拦截）
 - 历史默认不读；需要追溯时从 [archive/INDEX.md](archive/INDEX.md) 定位单位再全文检索
 - Grilling 类对话：每轮只问 1 个问题，按回答动态调整——渐进式对话，不是问卷调查
 

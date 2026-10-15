@@ -3,7 +3,7 @@
 Collection 阶段接入采集设备和场景动作，并保护不可被下游覆盖的 `raw MCAP`。本目录按“生产期长驻节点优先”组织：顶层五个 `_node` 目录一眼可见运行角色，接口、模型、bringup 和测试统一放在 `teleoperation_support/`，第三方 SDK 隔离在 `third_party/`。
 
 ```text
-src/collection/
+src/                            # 仓库根即 ROS workspace，11 个包平铺
 ├── rokoko_hand_receiver_node/                 # Rokoko UDP 接收节点
 ├── hand_retargeting_node/                     # 人手到 O10 重定向节点
 ├── omnihand_o10_control_node/                 # O10 安全控制节点
@@ -20,16 +20,16 @@ src/collection/
 在仓库根目录执行：
 
 ```bash
-./init_omnihand.sh
+./scripts/init_omnihand.sh
 ```
 
 脚本显式构建 11 个 Dexhit package，并分别运行原十包基线和 Launchpad 测试。它默认拒绝遗留的 Rokoko/O10 ROS 图，不启动节点、不发布命令、不清故障，也不驱动实体手。依赖安装必须显式使用 `--install`；其他选项见 `./init_omnihand.sh --help`。
 
-手工构建时使用 Collection 源码根即可；`third_party/COLCON_IGNORE` 会排除 vendor：
+手工构建在仓库根执行即可（仓库根即 workspace）；`src/third_party/COLCON_IGNORE` 会排除 vendor：
 
 ```bash
 source /opt/ros/jazzy/setup.bash
-colcon build --base-paths src/collection --symlink-install
+colcon build --symlink-install
 source install/setup.bash
 ```
 
@@ -38,7 +38,7 @@ source install/setup.bash
 真实 Rokoko → 重定向 → HCAN Provider → O10 控制链只通过仓库根入口启动：
 
 ```bash
-./start_omnihand_control.sh
+./scripts/start_omnihand_control.sh
 ```
 
 根脚本把参数原样转给 `teleoperation_support/production_bringup/` 的实现，自动锚定 worktree，并保持既有启动顺序、节点名、日志和停止语义。当前控制契约没有 arm/disarm 门：反馈就绪后，新鲜合法目标可能直接驱动实体手；启动前必须按全流程手册完成环境、反馈、错误和急停检查。
@@ -46,10 +46,10 @@ source install/setup.bash
 Launchpad 控制面入口保持：
 
 ```bash
-./start_launchpad.sh
+./scripts/start_launchpad.sh
 ```
 
-它默认只启动 `127.0.0.1:8710` 的控制面，不等同于启动业务节点。`./clear_o10_fault.sh` 与 `./decode_rokoko_udp.sh` 的命令接口也保持不变。
+它默认只启动 `127.0.0.1:8710` 的控制面，不等同于启动业务节点。`./scripts/clear_o10_fault.sh` 与 `./scripts/decode_rokoko_udp.sh` 的命令接口也保持不变。
 
 ## Rokoko 接收接口
 

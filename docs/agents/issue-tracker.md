@@ -37,4 +37,6 @@ A ticket is **not done when the code is done**. Closing requires distillation:
 - Capability/status conclusions update `STATUS.md`.
 - The narrative (conversation record, superseded designs) moves to `archive/<unit>/`, one directory per archiving event, indexed in `archive/INDEX.md`.
 
+Closing also requires the doc gate to be green: run `scripts/doc_gate.sh` — **errors must be zero** before the ticket resolves (fix or open a follow-up ticket); warnings are recorded in the closing reply, not blocking. Placement rules for any `.md` written along the way: `skills/doc-writing/SKILL.md` (four-question decision tree; enforced at write time by the `doc_write_gate` hook).
+
 The reviewer treats missing distillation as a diff defect.
