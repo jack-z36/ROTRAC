@@ -78,7 +78,7 @@ Agilink OmniHand SDK 1.1.8 的 x64/Jazzy 安装前缀位于 `third_party/agillin
 | 触觉频率命令 | `/o10/left/tactile_cmd` | `/o10/right/tactile_cmd` | `std_msgs/msg/Float32` |
 | 触觉状态 | `/o10/left/tactile_states` | `/o10/right/tactile_states` | `sensor_msgs/msg/Image`（1×268、`mono16`） |
 
-O10 的字段语义、关节顺序、限位和失败语义以 [OmniHand O10 控制契约与模块边界](../../DOCS/01_知识/02_OmniHand_O10控制契约与模块边界.md) 为权威。
+O10 的字段语义、关节顺序、限位和失败语义以 [O10 控制契约与安全语义](../docs/O10控制契约与安全语义.md) 为权威。
 
 触觉图像按 `thumb/index/middle/ring/little/palm/dorsum` 顺序平铺为 268 个
 有效像素；区域起始索引依次为 `0/16/34/52/70/88/166`。消息为小端

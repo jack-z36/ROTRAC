@@ -22,11 +22,12 @@ Launchpad（`rokoko_omnihand_launchpad`）是可选的网页一键编排控制�
 ├── omnihand_o10_model/     # URDF/MJCF 模型资产（provenance.json 记录上游来源）
 ├── scripts/                # 运维与诊断脚本（init/start/清故障/录制/解码）
 ├── runs/                   # 运行参数（retargeting_diag_params.yaml，活参数文件）
-├── DOCS/                   # 知识 / 约束 / 工程 / 归档 / 复盘
-├── CONTEXT.md              # 领域术语表（权威）
-├── HANDOFF*.md             # 历次交接文档
-├── .venv/                  # 数值 Python 环境（pinocchio/nlopt/vendor omnihand；git 忽略）
-└── wayfinder/              # 规划地图（清理与架构重构的决策票据；勿删）
+├── docs/                   # 知识层：架构/接口语义/算法基线/手册 + adr/ + agents/
+├── archive/                # 历史归档（默认不读，见 archive/INDEX.md）
+├── .scratch/               # 在途工作：spec + 票据（本地 markdown tracker）
+├── STATUS.md               # 现状快照：能力基线 / 在途 / 已知问题
+├── CONTEXT.md              # 领域术语表（唯一权威）
+└── .venv/                  # 数值 Python 环境（pinocchio/nlopt/vendor omnihand；git 忽略）
 ```
 
 ## 构建与测试（本机无硬件口径）
@@ -43,9 +44,10 @@ colcon test && colcon test-result
 
 ## 真机启动（需人工安全确认）
 
-`./scripts/start_omnihand_control.sh`（唯一规范入口；细节见 DOCS/03_工程/09_全流程启动手册）。
+`./scripts/start_omnihand_control.sh`（唯一规范入口；细节见 [docs/全流程启动手册.md](docs/全流程启动手册.md)）。
 
 ## 文档入口
 
-- 开始任何任务前先读 [AGENTS.md](AGENTS.md)（任务路由）
-- [项目知识](DOCS/01_知识/INDEX.md) · [项目约束](DOCS/02_约束/INDEX.md) · [当前工程状态](DOCS/03_工程/INDEX.md)
+- 开始任何任务前先读 [AGENTS.md](AGENTS.md)（agent 路由）与 [STATUS.md](STATUS.md)（现状快照）
+- 知识与手册：[docs/](docs/) ｜ 架构决策：[docs/adr/INDEX.md](docs/adr/INDEX.md) ｜ 术语：[CONTEXT.md](CONTEXT.md)
+- 在途工作：`.scratch/`（票据）｜ 历史追溯：[archive/INDEX.md](archive/INDEX.md)

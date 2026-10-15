@@ -9,9 +9,8 @@ superseded-by: 2026-08-19 移除 arm/disarm 门控（对齐官方 SDK 直控）
 > commit `4fedfaa`（2026-08-19）已将 `arm`/`disarm` 门控整体移除（`armed` 从
 > `O10ControlState`、`ControlOperation` 与 `ControlSession` 中删除）：运动由新鲜合法软目标
 > 直接驱动，`motion_enabled = feedback_ready ∧ error_monitor_ready ∧ target_ready ∧ target_fresh ∧ ¬fault_latched`，
-> 对齐官方 Agilink SDK 的直控行为；仅保留 `clear_fault` 操作 Service（见契约
-> [02](02_OmniHand_O10控制契约与模块边界.md)、[06](06_O10控制状态ROS接口契约.md)、
-> [07](07_O10操作者控制操作ROS接口契约.md)）。因此本文的描述是历史决策，不再是当前语义的权威依据；
+> 对齐官方 Agilink SDK 的直控行为；仅保留 `clear_fault` 操作 Service（原 02/06/07 三份契约
+> 文档已合并为 [O10 控制契约与安全语义](../O10控制契约与安全语义.md)）。因此本文的描述是历史决策，不再是当前语义的权威依据；
 > 仅 `adopted` 状态失效，锁存故障、反馈初始化硬限速、回读超时等其余安全机制仍生效。
 
 实体 O10 运动不能由“数据和算法已经就绪”自动触发。每个逻辑手侧独立维护操作者 `armed` 锁存，进程每次启动时均为 false；只有操作者在真实启动反馈、重定向就绪、输入新鲜且无锁存故障等前置条件当前成立时显式请求，才可置为 true。
