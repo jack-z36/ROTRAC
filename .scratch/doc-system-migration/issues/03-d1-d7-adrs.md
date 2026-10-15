@@ -4,7 +4,7 @@
 
 **Blocked by:** 01 结构搬迁与归档建账
 
-**Status:** ready-for-agent
+**Status:** in-progress（2026-10-15 认领，子代理执行中）
 
 - [ ] D1–D8 八项裁定中实质性的 D1–D7（模块形态、wire 保守平行 topic、per-hand contracts 包、拇指专调配置化、触觉/诊断/Launchpad）全部 ADR 化；D8（spec 文档位置）已随迁移消化，无需 ADR
 - [ ] 编号衔接旧 ADR，不冲突
