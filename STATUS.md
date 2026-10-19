@@ -12,7 +12,7 @@
 - **测试**：
   - `hand_retargeting`：109 passed / 14 skipped（真实资产 opt-in 与模块级跳过）；含扭转核心、会话、wire、分析、回放测试与 flake8/pep257。
   - 架构门禁：24 passed（A18 覆盖 `RetargetingConfig`/`TwistConfig`，拇指三字段按 ADR-0017 显式可选）。
-  - system test：21 passed / 5 failed；5 项均为既有 `test_t10_faults` 故障注入时序失败，单独运行同样失败，与扭转层无关。
+  - system test：全量 init 为 20 passed / 6 failed；其中 5 项是既有 `test_t10_faults` 故障注入时序失败（单独运行同样失败），另 1 项 `test_t10_graph::test_three_calibrated_public_replays...` 是负载下的既有时序 flake（单独运行 9 项全绿），均与扭转层无关。
   - Launchpad：80 passed / 2 xfailed。
 - **扭转功能层（软件，第一版）**：三指捏合门控、跨 re-grasp 累积转角、6 个 tripod 主动关节解析梯度残差精修、独立有效性门与 baseline 回退、`/hand_retargeting/{side}/twist_state`、只读 O10 反馈、独立 `runs/twist-diag/` 录制、离线分析与回放脚本均已落地；算法/验收口径见 `docs/扭转功能层算法与验收基线.md`。
 - **真机（2026-08，旧工作树 `4fedfaa`）**：全链路真机跑通过，四类叠加问题已修复并复验；现语义为无门控直驱，操作者唯一 Service 是 `clear_fault`（ADR-0004 已 superseded，ADR-0005 修订）。扭转层真机试点尚未执行。

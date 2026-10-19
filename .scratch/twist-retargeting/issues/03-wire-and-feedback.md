@@ -23,5 +23,6 @@
 - `system_tests/.../graph.py` 已加入全部 `twist_*` 参数；`rokoko_omnihand_system_test` 的 `test_t10_graph.py` 9 项全绿。
 - `init_omnihand.sh` 增加 `--executor sequential`，消除多个测试包在同一 ROS domain 并行造成的节点名串扰；`hand_retargeting`、`omnihand_o10_control`、架构门禁在修改后全绿。
 - 全量 init 仍有 5 项既有 `test_t10_faults` 故障注入时序失败；单独运行同样失败，属既有基线，与本票无关（见 STATUS 已知问题）。
+- 全量 init 另见 1 项 `test_t10_graph::test_three_calibrated_public_replays_record_p1_p2_p3_age_and_solve_metrics` 负载下时序 flake；单独运行 `test_t10_graph.py` 9 项全绿，本票的 ROS graph 验收以单独运行为准。
 - A18：`TwistConfig` 所有字段无默认值；`RetargetingConfig` 除 ADR-0017 的 3 个拇指可选字段外无默认值。拇指默认值冲突已按票要求另行记录。
 - 运行：`./scripts/init_omnihand.sh --allow-live-graph`；`pytest test/test_twist_node.py` 6 项全绿。

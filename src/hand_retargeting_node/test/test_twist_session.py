@@ -314,7 +314,7 @@ def test_feedback_never_changes_the_control_command():
         decision_without = without_feedback.process(frame)
         assert decision_with.command_positions == decision_without.command_positions
         if decision_with.command_positions is not None:
-            with_feedback.update_feedback(decision_with.command_positions, stamp)
+            with_feedback.update_feedback(decision_with.command_positions)
 
 
 def test_stale_resets_the_twist_episode_but_keeps_accumulated_theta():
@@ -473,6 +473,54 @@ def test_left_and_right_twist_state_is_isolated():
     assert right_decision.twist is not None
     assert right_decision.twist.active is False
     assert right_decision.twist.theta_task == pytest.approx(0.0)
+
+
+def test_transient_degenerate_activation_retries_on_later_frames():
+    session = _session(
+        _twist_config(), frozen_length_thresholds=(10.0,) * 5
+    )
+    degenerate = _base_positions()
+    # Collinear tripod: the gate geometry is usable, the screw axis is not.
+    degenerate[4] = (0.0, 2.0, 0.0)
+    degenerate[8] = (0.3, 2.0, 0.0)
+    degenerate[12] = (0.6, 2.0, 0.0)
+    decision = None
+    for index in range(7):
+        decision = session.process(_frame(index * 100_000_000, degenerate))
+    assert decision.twist.active is True
+    assert decision.twist.refinement_status == "fallback-baseline"
+    assert decision.twist.failure_reason == "human-reference-invalid"
+
+    positions = _base_positions()
+    for index in range(7, 10):
+        decision = session.process(_frame(index * 100_000_000, positions))
+    assert decision.twist.active is True
+    assert decision.twist.failure_reason != "human-reference-invalid"
+    assert decision.twist.refinement_status == "applied"
+
+
+def test_theta_robot_cmd_is_measured_from_the_published_command(monkeypatch):
+    session = _session(
+        _twist_config(), smooth_time_constants=(10.0,) * 10
+    )
+    measured = []
+    original = session._measure_state
+
+    def spy(command):
+        measured.append(np.asarray(command, dtype=np.float64).copy())
+        return original(command)
+
+    monkeypatch.setattr(session, "_measure_state", spy)
+    positions = _base_positions()
+    decision = None
+    for index in range(7):
+        decision = session.process(_frame(index * 100_000_000, positions))
+    assert decision.command_positions is not None
+    assert measured
+    assert any(
+        np.allclose(command, decision.command_positions, atol=1e-12)
+        for command in measured
+    )
 
 
 def test_backend_unavailable_is_reported_as_a_fallback():

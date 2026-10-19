@@ -22,3 +22,9 @@
 - `test_twist_session.py` 扩到 15 项：拇指固定值跳过/退出恢复、无名指小指基线、baseline warm start 不被精修写入、baseline 不完整、左右手隔离、反馈 NaN/可用位、stale 公开快照、solver 异常回退、退出低通收敛到 baseline。
 - 真实左右手资产核对：映射后人手轴与机器人参考轴点积约 0.99，同向检查不会误封真实手。
 - 运行：`ROS_DOMAIN_ID=79 python3.12 -m pytest test/test_twist_session.py test/test_t06_ik.py test/test_normalization.py test/test_retargeting_node.py`，全绿（含现有逐指 IK 回归）。
+
+### Review 修正（2026-10-19）
+
+- `theta_robot_cmd`/`axis_deviation_cmd_deg` 改为从**低通后的实际发布命令**测量，而不是精修/基线中间量；新增 `test_theta_robot_cmd_is_measured_from_the_published_command` 回归。
+- 激活帧人手几何瞬时退化不再锁死整个 episode：门控激活期间只要三指几何有效且 tracker 未激活，就重试锁存螺旋轴；机器人三指参考的瞬时 `robot-reference-invalid` 也逐帧重试，`axis-mismatch` 仍视为持续符号约定失败不重试。新增 `test_transient_degenerate_activation_retries_on_later_frames`。
+- 删除 `_apply_twist` 中不可达的 backend-unavailable 分支（非空参考意味着后端已在 latch 时可用；顶层 process 已处理后端缺失）；`update_feedback` 删除未使用的 `received_at_ns` 参数。

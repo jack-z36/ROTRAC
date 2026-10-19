@@ -3,7 +3,7 @@
 > `Status: ready-for-agent`
 >
 > 日期：2026-10-19
-> 上游参考：`docs/核心参考论文.md`
+> 上游参考：`.scratch/twist-retargeting/research/核心参考论文.md`（工作树参考；稳定知识蒸馏在 `docs/扭转功能层算法与验收基线.md`）
 > 现有算法基线：`docs/人手归一化与O10单指IK算法基线.md`
 > 现有架构边界：`docs/系统架构与模块边界.md`
 > 本规格只描述新增的扭转功能层；不改变自由空间逐指 IK、O10 控制节点安全语义和采数据 MCAP。
@@ -421,7 +421,7 @@ ROS wire：
 - 解析梯度测试目前只覆盖有限状态；需要扩到左右手、多个状态和边界附近。
 - 当前 system test 参数覆盖尚未加入 `twist_*`，实施时必须补上。
 - 当前工作树未验证构建门全绿；验收前必须运行初始化自检并记录输出。
-- 根目录 `核心参考论文.md` 散文件已按票 07 移入 `docs/核心参考论文.md`；`scripts/doc_gate.sh` 的既有 error 随之清零，文档门禁结果记录在票 07。
+- 根目录 `核心参考论文.md` 散文件已按票 07 移入 `.scratch/twist-retargeting/research/`（外部文献不复制进稳定知识层）；`scripts/doc_gate.sh` 的既有 error 随之清零，文档门禁结果记录在票 07。
 
 ## Out of Scope
 

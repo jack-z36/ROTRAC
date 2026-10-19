@@ -433,9 +433,7 @@ class HandRetargetingNode(Node):
         except ValueError:
             return
         positions = [message.position[index] for index in indices]
-        session.update_feedback(
-            positions, Time.from_msg(message.header.stamp).nanoseconds
-        )
+        session.update_feedback(positions)
 
     def _publish_twist_state(self, side: Side, decision) -> None:
         snapshot = getattr(decision, "twist", None)

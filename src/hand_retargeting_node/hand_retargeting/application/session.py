@@ -243,7 +243,7 @@ class RetargetingSession:
             return self.mark_stale()
         return None
 
-    def update_feedback(self, positions, received_at_ns: int | None = None) -> None:
+    def update_feedback(self, positions) -> None:
         """Store read-only O10 feedback for twist diagnostics. Never drives control."""
         if self.config.twist is None:
             return
@@ -305,10 +305,20 @@ class RetargetingSession:
         if self._twist_gate.just_activated:
             self._twist_reference = None
             self._twist_reference_failure = None
+            self._twist_reference_pending = False
+        if (
+            self._twist_gate.active
+            and valid
+            and not self._twist_tracker.active
+        ):
+            # A transient human-geometry failure at the activation frame must
+            # not consume the whole episode. Retry the latched axis until the
+            # operator's three-finger geometry is usable again.
             activated = self._twist_tracker.activate(points)
             self._twist_reference_pending = activated
-            if not activated:
-                self._twist_reference_failure = "human-reference-invalid"
+            self._twist_reference_failure = (
+                None if activated else "human-reference-invalid"
+            )
         if self._twist_gate.just_deactivated:
             self._twist_tracker.deactivate()
             self._twist_reference = None
@@ -393,35 +403,30 @@ class RetargetingSession:
             return None
 
     def _apply_twist(self, baseline: np.ndarray):
-        """Return (command, status, failure, refinement, duration, command_state)."""
+        """Return (command, status, failure, refinement, duration)."""
         if (
             self.config.twist is None
             or self._twist_gate is None
             or self._twist_tracker is None
         ):
-            return baseline, "not-active", None, None, 0.0, None
+            return baseline, "not-active", None, None, 0.0
         if not self._twist_gate.active:
-            return baseline, "not-active", None, None, 0.0, None
+            return baseline, "not-active", None, None, 0.0
         if not self._twist_tracker.active:
             return (
                 baseline, "fallback-baseline", "human-reference-invalid",
-                None, 0.0, self._measure_state(baseline),
+                None, 0.0,
             )
         if self._twist_reference is None:
             return (
                 baseline, "fallback-baseline",
                 self._twist_reference_failure or "robot-reference-invalid",
-                None, 0.0, None,
+                None, 0.0,
             )
         if not self._twist_tracker.valid:
             return (
                 baseline, "fallback-baseline", "human-geometry-invalid",
-                None, 0.0, self._measure_state(baseline),
-            )
-        if self.coupling is None or self.kinematics is None:
-            return (
-                baseline, "fallback-baseline", "backend-unavailable",
-                None, 0.0, self._measure_state(baseline),
+                None, 0.0,
             )
         limits = JOINT_LIMITS[self.side]
         lower = np.asarray(
@@ -451,23 +456,19 @@ class RetargetingSession:
         except Exception:
             return (
                 baseline, "fallback-baseline", "solver-error",
-                None, self._clock() - started, self._measure_state(baseline),
+                None, self._clock() - started,
             )
         duration = self._clock() - started
         if refinement.applied and refinement.candidate is not None:
             command = np.asarray(baseline, dtype=np.float64).copy()
             command[list(TRIPOD_ACTIVE_INDICES)] = refinement.candidate
-            return (
-                command, "applied", None, refinement, duration,
-                refinement.state,
-            )
+            return command, "applied", None, refinement, duration
         return (
             baseline,
             "fallback-baseline",
             refinement.failure or "refinement-rejected",
             refinement,
             duration,
-            self._measure_state(baseline),
         )
 
     def _twist_snapshot(
@@ -780,7 +781,14 @@ class RetargetingSession:
                 and self._twist_gate.active
             )
             if gate_active:
-                if self._twist_reference_pending:
+                if self._twist_reference_pending or (
+                    self._twist_reference is None
+                    and self._twist_reference_failure
+                    == "robot-reference-invalid"
+                ):
+                    # Retry a transient robot-tripod latch failure on later
+                    # frames; axis-mismatch is a persistent sign-convention
+                    # failure and is not retried.
                     twist_failure = self._latch_twist_reference(baseline)
                 if self._twist_reference is None:
                     combined = baseline
@@ -797,10 +805,19 @@ class RetargetingSession:
                         twist_failure,
                         refinement,
                         twist_duration,
-                        command_state,
                     ) = self._apply_twist(baseline)
             else:
                 combined = self._apply_thumb_adjustments(baseline)
+            if recovery_resume:
+                command = self._filter.hold()
+            else:
+                command = self._filter.update(combined, stamp_ns)
+            command_published = command is not None
+            # The diagnostic command angle must describe the command that was
+            # actually published, i.e. after the existing low-pass filter.
+            command_state = (
+                self._measure_state(command) if command is not None else None
+            )
             twist_snapshot = self._twist_snapshot(
                 status=twist_status,
                 failure=twist_failure,
@@ -809,12 +826,6 @@ class RetargetingSession:
                 duration_sec=twist_duration,
                 valid=side_valid,
             )
-            if recovery_resume:
-                command = self._filter.hold()
-                command_published = command is not None
-            else:
-                command = self._filter.update(combined, stamp_ns)
-                command_published = command is not None
         elif self._twist_gate is not None and self._twist_gate.active:
             twist_snapshot = self._twist_snapshot(
                 status="fallback-baseline",

@@ -22,3 +22,4 @@
 - `test_twist_replay.py` 4 项：命令按 stamp 对齐、枚举/数值差异、NaN 处理、配置重建。
 - `test_twist_replay_integration.py`：真实资产 + 合成 20 帧 MCAP，录制后再回放，17 个命令帧 `max_abs_diff=0.0`，TwistState active/status/failure/角度/目标项全部在 1e-9 内一致。
 - 时间口径固定为消息 `header.stamp`；负样本窗口相对该侧首条 `TwistState` 时间。物体实际转角未测在 summary 中显式标注。
+- 自由空间回归对比不另造工具：软件侧由现有五指 IK/状态测试与负样本 `active_frame_ratio`/误触发率覆盖；真机前后对比放入票 06 试点报告。
