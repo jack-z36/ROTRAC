@@ -4,11 +4,20 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] 与用户完成方案决策（A / B，见候选）
-- [ ] 落地（脚本修改或仓库迁移）
+- [x] 与用户完成方案决策（A / B，见候选）
+- [x] 落地（脚本修改或仓库迁移）
 - [ ] `./scripts/init_omnihand.sh` 构建与测试全绿，票内记录最终选择与验证输出
+
+## Resolution
+
+选择候选 A：所有 colcon base 指向 ASCII 路径。
+
+- `scripts/workspace_paths.sh` 提供 `ROTRAC_COLCON_BASE`（默认 `~/rotrac-build`）、`ROTRAC_BUILD_BASE`/`ROTRAC_INSTALL_BASE`/`ROTRAC_LOG_BASE`/`ROTRAC_TEST_RESULT_BASE`，并拒绝非 ASCII base。
+- `scripts/init_omnihand.sh`、`scripts/start_omnihand_control.sh`、`scripts/start_launchpad.sh`、`scripts/clear_o10_fault.sh`、`scripts/record_o10_diagnosis.sh`、`src/README.md`、启动手册和运行环境文档同步使用同一配置。
+- 验证（2026-10-19）：`./scripts/init_omnihand.sh --allow-live-graph` 构建 11 个包成功；`ros2 pkg prefix rokoko_omnihand_msgs` 可见；`from rokoko_omnihand_msgs.msg import TwistState` 通过。
+- 未全绿项：`rokoko_omnihand_system_test` 仍有 5 项既有 `test_t10_faults` 故障注入时序失败；单独运行同样失败，与中文路径/构建门无关。构建门本身（rosidl 接口生成）已恢复，故本票按"构建门修复"关闭；5 项测试失败另行按既有基线处理。
 
 ## 根因（已实锤，最小复现已做）
 

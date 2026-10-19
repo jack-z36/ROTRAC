@@ -25,12 +25,15 @@ src/                            # 仓库根即 ROS workspace，11 个包平铺
 
 脚本显式构建 11 个 Dexhit package，并分别运行原十包基线和 Launchpad 测试。它默认拒绝遗留的 Rokoko/O10 ROS 图，不启动节点、不发布命令、不清故障，也不驱动实体手。依赖安装必须显式使用 `--install`；其他选项见 `./init_omnihand.sh --help`。
 
-手工构建在仓库根执行即可（仓库根即 workspace）；`src/third_party/COLCON_IGNORE` 会排除 vendor：
+手工构建在仓库根执行即可（仓库根即 workspace）；`src/third_party/COLCON_IGNORE` 会排除 vendor。仓库路径含中文，构建产物必须放在 ASCII base：
 
 ```bash
 source /opt/ros/jazzy/setup.bash
-colcon build --symlink-install
-source install/setup.bash
+source scripts/workspace_paths.sh
+colcon --log-base "$ROTRAC_LOG_BASE" build --symlink-install \
+  --build-base "$ROTRAC_BUILD_BASE" \
+  --install-base "$ROTRAC_INSTALL_BASE"
+source "$ROTRAC_INSTALL_BASE/setup.bash"
 ```
 
 ## 标准启动入口

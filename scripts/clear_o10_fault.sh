@@ -23,8 +23,10 @@ SIDE="${1:-left}"
 
 # 锚定本 worktree 的 ROS 环境
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=workspace_paths.sh
+source "$SCRIPT_DIR/workspace_paths.sh"
 source /opt/ros/jazzy/setup.bash
-[[ -f "$SCRIPT_DIR/install/setup.bash" ]] && source "$SCRIPT_DIR/install/setup.bash"
+[[ -f "$ROTRAC_INSTALL_BASE/setup.bash" ]] && source "$ROTRAC_INSTALL_BASE/setup.bash"
 
 FATAL_MASK=15  # bit0-3 为致命硬件错误位
 

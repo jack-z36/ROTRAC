@@ -6,6 +6,9 @@ set -Eeuo pipefail
 
 COLLECTION_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)"
 COLLECTION_SRC="$COLLECTION_ROOT/src"
+# Keep generated ROSIDL artifacts under an ASCII base; see workspace_paths.sh.
+# shellcheck source=workspace_paths.sh
+source "$COLLECTION_ROOT/scripts/workspace_paths.sh"
 ROS_DISTRO_NAME="${ROS_DISTRO:-jazzy}"
 ROS_SETUP="/opt/ros/$ROS_DISTRO_NAME/setup.bash"
 NUMERIC_PYTHON="${DEXHIT_COLLECTION_PYTHON:-$COLLECTION_ROOT/.venv/bin/python}"
@@ -90,6 +93,7 @@ done
 cd "$COLLECTION_ROOT"
 info "Repository: $COLLECTION_ROOT"
 info "Collection source: $COLLECTION_SRC"
+info "Colcon base (ASCII): $ROTRAC_COLCON_BASE"
 info "Packages: ${#PACKAGE_DIRS[@]} owned packages (third_party excluded explicitly)"
 
 command -v python3 >/dev/null || die "缺少 python3"
@@ -113,13 +117,13 @@ export DEXHIT_COLLECTION_PREFIX="${DEXHIT_COLLECTION_PREFIX:-$NUMERIC_PREFIX}"
 export LD_LIBRARY_PATH="$NUMERIC_PREFIX/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 
 if ((SKIP_BUILD)); then
-    if [[ -f "$COLLECTION_ROOT/install/setup.bash" ]]; then
+    if [[ -f "$ROTRAC_INSTALL_BASE/setup.bash" ]]; then
         set +u
         # shellcheck disable=SC1091
-        source "$COLLECTION_ROOT/install/setup.bash"
+        source "$ROTRAC_INSTALL_BASE/setup.bash"
         set -u
     else
-        warn "跳过构建且当前没有 install/setup.bash；package 可见性检查将失败。"
+        warn "跳过构建且当前没有 $ROTRAC_INSTALL_BASE/setup.bash；package 可见性检查将失败。"
     fi
 fi
 
@@ -157,9 +161,10 @@ if ((ALLOW_LIVE_GRAPH == 0)) && command -v ros2 >/dev/null; then
 fi
 
 if ((SKIP_BUILD == 0)); then
+    mkdir -p "$ROTRAC_BUILD_BASE" "$ROTRAC_INSTALL_BASE" "$ROTRAC_LOG_BASE"
     stale_build_cache=0
     for package in "${ALL_PACKAGE_NAMES[@]}"; do
-        package_build="$COLLECTION_ROOT/build/$package"
+        package_build="$ROTRAC_BUILD_BASE/$package"
         if [[ -L "$package_build/setup.py" ]] \
             && [[ "$(readlink "$package_build/setup.py")" == *"/src/collection/"* ]]; then
             stale_build_cache=1
@@ -172,20 +177,24 @@ if ((SKIP_BUILD == 0)); then
     if ((stale_build_cache)); then
         warn "检测到目录迁移前的 generated build cache；将重建 11 个受管 package 的 build 目录。"
         for package in "${ALL_PACKAGE_NAMES[@]}"; do
-            rm -rf -- "$COLLECTION_ROOT/build/$package"
+            rm -rf -- "$ROTRAC_BUILD_BASE/$package"
         done
     fi
     info "Building 11 Collection packages (software only; no nodes are started)."
-    PATH="/usr/bin:/bin:$PATH" colcon build --base-paths "${PACKAGE_DIRS[@]}" \
+    PATH="/usr/bin:/bin:$PATH" colcon --log-base "$ROTRAC_LOG_BASE" build \
+        --base-paths "${PACKAGE_DIRS[@]}" \
+        --build-base "$ROTRAC_BUILD_BASE" \
+        --install-base "$ROTRAC_INSTALL_BASE" \
+        --test-result-base "$ROTRAC_TEST_RESULT_BASE" \
         --symlink-install --cmake-clean-cache --event-handlers console_direct+ \
         --cmake-args \
         -DPython3_EXECUTABLE=/usr/bin/python3.12 \
         -DPYTHON_EXECUTABLE=/usr/bin/python3.12
-    [[ -f "$COLLECTION_ROOT/install/setup.bash" ]] \
-        || die "构建完成但缺少 install/setup.bash"
+    [[ -f "$ROTRAC_INSTALL_BASE/setup.bash" ]] \
+        || die "构建完成但缺少 $ROTRAC_INSTALL_BASE/setup.bash"
     set +u
     # shellcheck disable=SC1091
-    source "$COLLECTION_ROOT/install/setup.bash"
+    source "$ROTRAC_INSTALL_BASE/setup.bash"
     set -u
 else
     info "Build skipped."
@@ -193,7 +202,7 @@ fi
 
 for package in "${ALL_PACKAGE_NAMES[@]}"; do
     ros2 pkg prefix "$package" >/dev/null \
-        || die "ROS package 不可见: $package（请先构建并 source install/setup.bash）"
+        || die "ROS package 不可见: $package（请先构建并 source $ROTRAC_INSTALL_BASE/setup.bash）"
 done
 
 if ((SKIP_TESTS == 0)); then
@@ -201,7 +210,9 @@ if ((SKIP_TESTS == 0)); then
     # but mirror the production runtime (start_omnihand_control.sh): prepend the
     # numeric prefix site-packages so pinocchio/nlopt are importable by tests.
     info "Test PYTHONPATH uses the numeric runtime: $NUMERIC_PREFIX/lib/python3.12/site-packages"
-    export PYTHONPATH="$NUMERIC_PREFIX/lib/python3.12/site-packages${PYTHONPATH:+:$PYTHONPATH}"
+    export PYTHONPATH="$NUMERIC_PREFIX/lib/python3.12/site-packages:$NUMERIC_PREFIX/lib/python3.12/site-packages/cmeel.prefix/lib/python3.12/site-packages${PYTHONPATH:+:$PYTHONPATH}"
+    # Keep the software test graph isolated from any live teleoperation graph.
+    export ROS_DOMAIN_ID="${ROTRAC_TEST_ROS_DOMAIN_ID:-77}"
     # The injected prefix ships pytest 9, whose hookspec rejects the legacy
     # 'path' argument still used by the ROS system-wide launch_testing plugin
     # entry point. The CMake-side ament_add_pytest_test suites already run with
@@ -212,15 +223,25 @@ if ((SKIP_TESTS == 0)); then
     # unittest step and collect nothing. Pin the pytest step explicitly to keep
     # the exact baseline test runner per ament_python package.
     info "Running the original 10-package software baseline."
-    PATH="/usr/bin:/bin:$PATH" colcon test --packages-select "${CORE_PACKAGE_NAMES[@]}" \
+    PATH="/usr/bin:/bin:$PATH" colcon --log-base "$ROTRAC_LOG_BASE" test \
+        --packages-select "${CORE_PACKAGE_NAMES[@]}" \
+        --build-base "$ROTRAC_BUILD_BASE" \
+        --install-base "$ROTRAC_INSTALL_BASE" \
+        --test-result-base "$ROTRAC_TEST_RESULT_BASE" \
+        --executor sequential \
         --python-testing pytest \
         --event-handlers console_direct+
     info "Running the Launchpad package baseline separately."
-    PATH="/usr/bin:/bin:$PATH" colcon test --packages-select rokoko_omnihand_launchpad \
+    PATH="/usr/bin:/bin:$PATH" colcon --log-base "$ROTRAC_LOG_BASE" test \
+        --packages-select rokoko_omnihand_launchpad \
+        --build-base "$ROTRAC_BUILD_BASE" \
+        --install-base "$ROTRAC_INSTALL_BASE" \
+        --test-result-base "$ROTRAC_TEST_RESULT_BASE" \
+        --executor sequential \
         --python-testing pytest \
         --event-handlers console_direct+
     info "Combined test result (existing baseline failures remain visible)."
-    colcon test-result --verbose
+    colcon test-result --test-result-base "$ROTRAC_TEST_RESULT_BASE" --verbose
 else
     info "Tests skipped."
 fi
@@ -228,6 +249,8 @@ fi
 cat <<EOF
 [init][OK] Rokoko -> OmniHand software baseline is ready.
   Root: $COLLECTION_ROOT
+  Colcon base (ASCII): $ROTRAC_COLCON_BASE
+  Install setup: $ROTRAC_INSTALL_BASE/setup.bash
   ROS:  $ROS_SETUP
   Python: $NUMERIC_PYTHON
   Fixture: $MODEL_FIXTURE

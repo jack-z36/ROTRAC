@@ -6,10 +6,12 @@ set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd -P)"
+# shellcheck source=workspace_paths.sh
+source "$SCRIPT_DIR/workspace_paths.sh"
 PYTHON_BIN="$ROOT_DIR/.venv/bin/python"
 PYTHON_SITE="$ROOT_DIR/.venv/lib/python3.12/site-packages"
 ROS_SETUP="/opt/ros/jazzy/setup.bash"
-WORKSPACE_SETUP="$ROOT_DIR/install/setup.bash"
+WORKSPACE_SETUP="$ROTRAC_INSTALL_BASE/setup.bash"
 LAUNCHPAD_SRC="$ROOT_DIR/src/rokoko_omnihand_launchpad_node"
 URL="http://127.0.0.1:8710"
 

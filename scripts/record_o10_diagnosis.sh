@@ -18,7 +18,9 @@ set -Eeuo pipefail
 
 COLLECTION_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)"
 START_SCRIPT="$COLLECTION_ROOT/scripts/start_omnihand_control.sh"
-INSTALL_SETUP="$COLLECTION_ROOT/install/setup.bash"
+# shellcheck source=workspace_paths.sh
+source "$COLLECTION_ROOT/scripts/workspace_paths.sh"
+INSTALL_SETUP="$ROTRAC_INSTALL_BASE/setup.bash"
 
 DEFAULT_EXPERIMENTS=(E0 E5 E1 E2 E3)
 declare -A EXP_DESC=(
