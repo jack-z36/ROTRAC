@@ -22,3 +22,6 @@
 - [触觉 Port 保留为只读可选能力](0018-tactile-port-optional-read-only-capability.md)：只读不进安全原则通用化，无触觉的 HandAdapter 返回 `NOT_SUPPORTED`。
 - [诊断消息继承结构骨架、O10 专属字段按手参数化](0019-diagnostics-skeleton-fixed-fields-parameterized-per-hand.md)：逐侧/事件驱动/只读骨架跨手固定，残差、错误位等字段维度与语义按手声明。
 - [Launchpad 方块同构替换、内容数据驱动](0020-launchpad-blocks-isomorphic-replacement-data-driven.md)：方块与节点一一对应不变，provider 命名、关节曲线与录制清单由 per-hand 编排配置驱动。
+- [扭转残差精修叠加在逐指 IK 基线之上](0021-twist-refinement-layered-on-baseline.md)：只改写 6 个 tripod 主动关节，基线历史与自由空间语义不变，精修失败回退基线。
+- [扭转运行时使用解析梯度，禁止数值差分](0022-twist-runtime-analytic-gradient.md)：运行时固定迭代投影梯度，中心差分只用于离线测试解析梯度。
+- [扭转诊断使用独立 topic 与独立录制边界](0023-twist-diagnostics-independent-topic-and-recording.md)：`TwistState` 与 `runs/twist-diag/` 独立于采数据 MCAP；反馈只读且不参与控制。

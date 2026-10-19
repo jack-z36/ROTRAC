@@ -67,7 +67,34 @@
 
 事件驱动发布（帧处理、进入 stale、恢复转换、模型初始化成败、阶段变化），不要求固定周期重复相同快照；监控方按 `header.stamp` 判断状态自身是否过旧。两个状态 Topic 必须可由外部 rosbag2/MCAP 录制；重定向节点不直接写 MCAP。
 
-## 3. 相关文档
+## 3. TwistState：扭转功能层只读诊断
 
+消息 `rokoko_omnihand_msgs/msg/TwistState`，Topic `/hand_retargeting/{left,right}/twist_state`，与 `RetargetingState` 平行存在。它只描述扭转门控和 6 个 tripod 关节的精修，不复制逐指基线残差；逐指基线仍看 `RetargetingState`。字段完整清单以 `src/teleoperation_support/ros_interfaces/msg/TwistState.msg` 为准。
+
+### 字段语义
+
+- **帧与门控**：`header.stamp` 是本条诊断实际发布时间；`side`、`valid` 标识帧有效性；`active` 是门控状态。`gate_aperture`/`gate_extension` 是已按冻结三指尺度归一化的无量纲量，`gate_on_count`/`gate_off_count` 是当前连续帧计数。
+- **角度**：`theta_task` 是跨 re-grasp 保留的人手累积转角；`theta_base` 是本次激活锁存的起点；`theta_increment = theta_task - theta_base` 是本次目标增量。`theta_robot_cmd` 从本帧发布命令对应的关节角计算，回退时等于 baseline 测量值；`theta_robot_fb` 从最新 O10 反馈计算。
+- **轴偏差**：`axis_deviation_cmd_deg`/`axis_deviation_fb_deg` 是当前三指法向与锁存参考轴的夹角，单位度。
+- **目标项**：`objective_total` 及 `objective_rot/conn/axis/pos` 是四项无量纲目标值，总值为四项之和。
+- **求解状态**：`refinement_status` 为 `REFINEMENT_NOT_ACTIVE / REFINEMENT_APPLIED / REFINEMENT_FALLBACK_BASELINE`；`failure_reason` 的数值到语义映射见 msg，包含参考无效、人体几何无效、后端不可用、求解器异常、非有限、限位、trust region、几何退化、轴偏差超限、baseline 不完整、精修被拒和轴反向。`iterations`/`evaluations`/`solve_duration_sec` 只描述本帧精修尝试。
+
+### NaN 与可用位约定
+
+- 反馈转角、反馈轴偏差各自带 `*_available` 位；不可用时位为 `false` 且值为 NaN，**禁止用 0 冒充**。
+- 参考无效、几何无效、反馈缺失或门控未激活时，对应的命令侧/反馈侧角度和轴偏差可以为 NaN；消费者必须先看可用位，再看数值。
+- `objective_*` 在未尝试精修或精修无有效评估时为 NaN；`solve_duration_sec` 在未求解时为 NaN。
+- `theta_task`/`theta_base`/`theta_increment` 是纯累积量，门控未激活时仍可有历史值（0 是合法历史值，不是"未知"）。
+
+### 发布与反馈边界
+
+- 每帧 raw hand 处理、进入 stale 时发布；模型资产不可用时发布 `valid=false`、`failure_reason=BACKEND_UNAVAILABLE` 的显式不可用快照。
+- `/o10/{side}/joint_states` 由重定向节点只读订阅，只用于 `theta_robot_fb` 和反馈轴偏差；它不参与门控、精修、回退或发布决策，有无反馈时控制命令必须完全一致。
+- 扭转诊断录制独立于采数据 MCAP：`runs/twist-diag/<timestamp>/`，录制主题、QoS override 和配置快照见《扭转功能层算法与验收基线》与 `scripts/record_twist_diagnosis.sh`。
+
+## 4. 相关文档
+
+- [手套21关键点标准化规范](手套21关键点标准化规范.md)（公司标准命名、Rokoko 映射策略、未来换手套扩展）
 - [人手归一化与O10单指IK算法基线](人手归一化与O10单指IK算法基线.md)（状态背后的算法语义与式（62）输出顺序）
+- [扭转功能层算法与验收基线](扭转功能层算法与验收基线.md)（门控、转角、目标、有效性门与验收口径）
 - [O10控制契约与安全语义](O10控制契约与安全语义.md)（软目标被谁消费、安全为何独立）
