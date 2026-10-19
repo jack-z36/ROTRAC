@@ -19,13 +19,19 @@ set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE_ROOT="$(cd -- "$SCRIPT_DIR/../../.." && pwd)"
-INSTALL_PREFIX="$WORKSPACE_ROOT/install"
+# Generated ROSIDL artifacts live under the ASCII colcon base; see
+# scripts/workspace_paths.sh.
+# shellcheck source=workspace_paths.sh
+source "$WORKSPACE_ROOT/scripts/workspace_paths.sh"
+INSTALL_PREFIX="$ROTRAC_INSTALL_BASE"
 RETARGET_PARAMS="$WORKSPACE_ROOT/runs/retargeting_diag_params.yaml"
 RETARGET_WRAPPER="$WORKSPACE_ROOT/src/hand_retargeting_node/scripts/hand_retargeting_node"
+TWIST_RECORDER="$WORKSPACE_ROOT/scripts/record_twist_diagnosis.sh"
 
 ROS_SETUP="/opt/ros/jazzy/setup.bash"
 RUNTIME_PREFIX="${DEXHIT_COLLECTION_PREFIX:-$WORKSPACE_ROOT/.venv}"
-MODEL_FIXTURE="${OMNIHAND_O10_MODEL_FIXTURE:-$WORKSPACE_ROOT/omnihand_o10_model}"
+DEFAULT_MODEL_FIXTURE="$WORKSPACE_ROOT/omnihand_o10_model"
+MODEL_FIXTURE="${OMNIHAND_O10_MODEL_FIXTURE:-$DEFAULT_MODEL_FIXTURE}"
 if [[ ! -f "$MODEL_FIXTURE/provenance.json" && -n "${OMNIHAND_O10_MODEL_FIXTURE:-}" && -f "$DEFAULT_MODEL_FIXTURE/provenance.json" ]]; then
   printf "[omnihand-launch] WARN: ignoring invalid OMNIHAND_O10_MODEL_FIXTURE=%q; using %s\n" "$OMNIHAND_O10_MODEL_FIXTURE" "$DEFAULT_MODEL_FIXTURE" >&2
   MODEL_FIXTURE="$DEFAULT_MODEL_FIXTURE"
@@ -85,6 +91,9 @@ Environment overrides:
                                       exactly one device.
   OMNIHAND_O10_RIGHT_CANFD_DEVICE_ID  HCAN device index for the right side.
                                       Default 0.
+  OMNIHAND_TWIST_DIAG_RECORD          Set to 0 to disable the independent
+                                      DexTwist diagnostic recorder. Default 1.
+  OMNIHAND_TWIST_DIAG_MAX_SEC         Maximum recorder duration. Default 3600.
 
 Safety boundary is unchanged: there is no arm gate; fresh valid targets can
 move the physical O10 after feedback is ready. Ctrl-C stops every child.
@@ -212,6 +221,9 @@ check_prerequisites() {
   command -v lsusb >/dev/null 2>&1 || die "lsusb is required for the HCAN preflight"
   [[ -x "$RETARGET_WRAPPER" ]] || die "missing retargeting runtime wrapper: $RETARGET_WRAPPER"
   [[ -f "$RETARGET_PARAMS" ]] || die "missing retargeting parameters: $RETARGET_PARAMS"
+  if [[ "${OMNIHAND_TWIST_DIAG_RECORD:-1}" != "0" ]]; then
+    [[ -x "$TWIST_RECORDER" ]] || die "missing twist diagnostic recorder: $TWIST_RECORDER"
+  fi
   [[ -f "$MODEL_FIXTURE/provenance.json" ]] || die "missing O10 model fixture provenance: $MODEL_FIXTURE/provenance.json"
   [[ -d "$RUNTIME_PREFIX/lib/python3.12/site-packages" ]] || die "missing Python 3.12 runtime: $RUNTIME_PREFIX"
 
@@ -282,6 +294,17 @@ check_prerequisites
 
 log "logs: $LOG_DIR"
 log "hardware safety: no arm gate; fresh valid targets can move the physical O10"
+
+# Start the independent diagnostic recorder before any business node so the
+# capture includes startup transitions. It is a separate process and never
+# writes the collection MCAP dataset.
+if [[ "${OMNIHAND_TWIST_DIAG_RECORD:-1}" != "0" ]]; then
+  start_node "twist_diag_recorder" \
+    bash "$TWIST_RECORDER" \
+      --side "$SIDES" \
+      --config "$RETARGET_PARAMS" \
+      --max-duration "${OMNIHAND_TWIST_DIAG_MAX_SEC:-3600}"
+fi
 
 start_node "rokoko_hand_receiver" \
   ros2 run rokoko_hand_receiver rokoko_hand_receiver_node --ros-args \

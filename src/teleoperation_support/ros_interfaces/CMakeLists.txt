@@ -17,6 +17,7 @@ find_package(builtin_interfaces REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/RawHandFrame.msg"
   "msg/RetargetingState.msg"
+  "msg/TwistState.msg"
   "msg/O10ControlState.msg"
   "srv/ReadO10ActiveJoints.srv"
   "srv/ControlOperation.srv"

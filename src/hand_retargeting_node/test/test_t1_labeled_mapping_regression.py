@@ -39,7 +39,7 @@ def _real_left_session():
     config = RetargetingConfig(
         1e-6, 1e-6, 1e-6, 3, 2,
         (0.01,) * 5, (0.10,) * 5, (0.05,) * 5,
-        500, 0.5, (0.1,) * 10, 0.5, 3, 0.1, 0.5, 1.0,
+        500, 0.5, (0.1,) * 10, 0.5, 3, 0.1, 0.5, 1.0, None,
     )
     session = RetargetingSession(
         Side.LEFT,
@@ -60,7 +60,7 @@ def _real_right_session():
     config = RetargetingConfig(
         1e-6, 1e-6, 1e-6, 3, 2,
         (0.01,) * 5, (0.10,) * 5, (0.05,) * 5,
-        500, 0.5, (0.1,) * 10, 0.5, 3, 0.1, 0.5, 1.0,
+        500, 0.5, (0.1,) * 10, 0.5, 3, 0.1, 0.5, 1.0, None,
     )
     session = RetargetingSession(
         Side.RIGHT,

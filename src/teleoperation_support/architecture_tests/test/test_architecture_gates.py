@@ -376,7 +376,7 @@ def test_A15_retarg_side_aggregates_are_isolated():
         ik_max_time_sec=0.01, smooth_time_constants=(0.1,) * 10,
         stale_timeout_sec=1.0, recovery_min_valid_frames=1,
         recovery_min_duration_sec=0.1, recovery_confirmation_timeout_sec=0.5,
-        thumb_roll_sensitivity=1.0,
+        thumb_roll_sensitivity=1.0, twist=None,
     )
     geometry = RobotHandGeometry(
         tuple((float(index), 0.0, 0.0) for index in range(5)),
@@ -428,10 +428,25 @@ def test_A18_experimental_parameters_are_required():
     sys.path.insert(0, str(_package_root("hand_retargeting")))
     sys.path.insert(0, str(_package_root("omnihand_o10_control")))
     sys.path.insert(0, str(_package_root("omnihand_o10_contracts")))
-    from hand_retargeting.contracts import RetargetingConfig
+    from hand_retargeting.contracts import RetargetingConfig, TwistConfig
     from omnihand_o10_control.contracts import ControlConfig
 
-    assert all(parameter.default is parameter.empty for parameter in signature(RetargetingConfig).parameters.values())
+    # ADR-0017 keeps the per-finger thumb adjustments optional. Every other
+    # retargeting parameter, and every twist parameter, has no default.
+    optional_thumb = {
+        "thumb_abad_sensitivity",
+        "thumb_roll_fixed_value",
+        "thumb_abad_fixed_value",
+    }
+    assert all(
+        parameter.default is parameter.empty
+        for parameter in signature(RetargetingConfig).parameters.values()
+        if parameter.name not in optional_thumb
+    )
+    assert all(
+        parameter.default is parameter.empty
+        for parameter in signature(TwistConfig).parameters.values()
+    )
     assert all(parameter.default is parameter.empty for parameter in signature(ControlConfig).parameters.values())
     control_node = (_package_root("omnihand_o10_control") / "omnihand_o10_control/node.py").read_text(encoding="utf-8")
     retarget_node = (_package_root("hand_retargeting") / "hand_retargeting/node.py").read_text(encoding="utf-8")

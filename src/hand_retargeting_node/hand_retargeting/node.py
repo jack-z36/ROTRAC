@@ -11,7 +11,7 @@ import rclpy
 from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, HistoryPolicy, QoSProfile, ReliabilityPolicy
 from rclpy.time import Time
-from rokoko_omnihand_msgs.msg import RawHandFrame, RetargetingState
+from rokoko_omnihand_msgs.msg import RawHandFrame, RetargetingState, TwistState
 from sensor_msgs.msg import JointState
 
 from .adapters.model_geometry import (
@@ -21,7 +21,7 @@ from .adapters.model_geometry import (
 from .adapters.nlopt import NloptSlsqpOptimizer, NLoptUnavailableError
 from .adapters.pinocchio import load_pinocchio_kinematics, PinocchioUnavailableError
 from .application.session import RetargetingSession
-from .contracts import RawHandFrameValue, RetargetingConfig
+from .contracts import RawHandFrameValue, RetargetingConfig, TwistConfig
 from .core.coupling import CouplingModel
 
 
@@ -49,6 +49,27 @@ _LENGTH_VALUES = {
     "collecting": RetargetingState.LENGTH_COLLECTING,
     "frozen": RetargetingState.LENGTH_FROZEN,
     "current-invalid": RetargetingState.LENGTH_CURRENT_INVALID,
+}
+_REFINEMENT_VALUES = {
+    "not-active": TwistState.REFINEMENT_NOT_ACTIVE,
+    "applied": TwistState.REFINEMENT_APPLIED,
+    "fallback-baseline": TwistState.REFINEMENT_FALLBACK_BASELINE,
+}
+_FAILURE_VALUES = {
+    None: TwistState.FAILURE_NONE,
+    "robot-reference-invalid": TwistState.FAILURE_ROBOT_REFERENCE_INVALID,
+    "human-reference-invalid": TwistState.FAILURE_HUMAN_REFERENCE_INVALID,
+    "human-geometry-invalid": TwistState.FAILURE_HUMAN_GEOMETRY_INVALID,
+    "backend-unavailable": TwistState.FAILURE_BACKEND_UNAVAILABLE,
+    "solver-error": TwistState.FAILURE_SOLVER_ERROR,
+    "nonfinite": TwistState.FAILURE_NONFINITE,
+    "limits": TwistState.FAILURE_LIMITS,
+    "trust-region": TwistState.FAILURE_TRUST_REGION,
+    "degenerate-tripod": TwistState.FAILURE_DEGENERATE_TRIPOD,
+    "axis-deviation": TwistState.FAILURE_AXIS_DEVIATION,
+    "baseline-incomplete": TwistState.FAILURE_BASELINE_INCOMPLETE,
+    "refinement-rejected": TwistState.FAILURE_REFINEMENT_REJECTED,
+    "axis-mismatch": TwistState.FAILURE_AXIS_MISMATCH,
 }
 
 
@@ -180,12 +201,31 @@ class HandRetargetingNode(Node):
             )
             for side in selected_sides
         }
+        self._twist_publishers = {
+            side: self.create_publisher(
+                TwistState,
+                f"/hand_retargeting/{side.value}/twist_state",
+                state_qos,
+            )
+            for side in selected_sides
+        }
         self._subscriptions = [
             self.create_subscription(
                 RawHandFrame,
                 f"/rokoko/{side.value}/raw_hand",
                 lambda message, selected=side: self._on_raw(selected, message),
                 raw_qos,
+            )
+            for side in selected_sides
+        ]
+        # Read-only feedback used only for twist diagnostics. It is never read
+        # by the retargeting control path.
+        self._feedback_subscriptions = [
+            self.create_subscription(
+                JointState,
+                f"/o10/{side.value}/joint_states",
+                lambda message, selected=side: self._on_joint_states(selected, message),
+                10,
             )
             for side in selected_sides
         ]
@@ -218,6 +258,23 @@ class HandRetargetingNode(Node):
                 "maximum receive-time recovery confirmation window in seconds"
             ),
             "thumb_roll_sensitivity": "post-IK gain for the thumb_roll active joint",
+            "twist_gate_aperture_on": "normalized tripod aperture entry threshold",
+            "twist_gate_aperture_off": "normalized tripod aperture exit threshold",
+            "twist_gate_extension_min": "normalized tripod extension lower bound",
+            "twist_gate_on_frames": "consecutive frames required to enter twist mode",
+            "twist_gate_off_frames": "consecutive frames required to exit twist mode",
+            "twist_weight_rot": "twist angle tracking weight",
+            "twist_weight_conn": "tripod closure weight",
+            "twist_weight_axis": "screw axis consistency weight",
+            "twist_weight_pos": "tripod centroid weight",
+            "twist_iterations": "projected gradient iterations per frame",
+            "twist_step_max": "maximum per-joint coordinate step per iteration",
+            "twist_trust_region": "maximum per-joint change from the baseline",
+            "twist_delta_theta_clip": "maximum human angle increment per frame",
+            "twist_gradient_tolerance": "early-stop gradient infinity norm",
+            "twist_axis_epsilon": "minimum tripod normal norm",
+            "twist_projection_epsilon": "minimum in-plane projection norm",
+            "twist_axis_deviation_limit_deg": "maximum axis deviation from reference",
         }
         values = {}
         missing = []
@@ -254,6 +311,29 @@ class HandRetargetingNode(Node):
         ).value
         if fixed_thumb_abad is not None:
             values["thumb_abad_fixed_value"] = fixed_thumb_abad
+        twist_names = (
+            "twist_gate_aperture_on",
+            "twist_gate_aperture_off",
+            "twist_gate_extension_min",
+            "twist_gate_on_frames",
+            "twist_gate_off_frames",
+            "twist_weight_rot",
+            "twist_weight_conn",
+            "twist_weight_axis",
+            "twist_weight_pos",
+            "twist_iterations",
+            "twist_step_max",
+            "twist_trust_region",
+            "twist_delta_theta_clip",
+            "twist_gradient_tolerance",
+            "twist_axis_epsilon",
+            "twist_projection_epsilon",
+            "twist_axis_deviation_limit_deg",
+        )
+        twist_values = {
+            name.removeprefix("twist_"): values.pop(name) for name in twist_names
+        }
+        values["twist"] = TwistConfig(**twist_values)
         return RetargetingConfig(**values)
 
     @staticmethod
@@ -325,6 +405,7 @@ class HandRetargetingNode(Node):
             return
 
         self._publish_state(side, decision)
+        self._publish_twist_state(side, decision)
         if decision.command_published and decision.command_positions is not None:
             command = JointState()
             command.header.stamp = message.header.stamp
@@ -339,6 +420,63 @@ class HandRetargetingNode(Node):
             decision = session.check_stale(now_ns)
             if decision is not None:
                 self._publish_state(side, decision)
+                self._publish_twist_state(side, decision)
+
+    def _on_joint_states(self, side: Side, message: JointState) -> None:
+        """Feed read-only O10 feedback to the twist diagnostics only."""
+        session = self._sessions.get(side)
+        if session is None:
+            return
+        names = list(message.name)
+        try:
+            indices = [names.index(name) for name in ACTIVE_JOINT_NAMES]
+        except ValueError:
+            return
+        positions = [message.position[index] for index in indices]
+        session.update_feedback(
+            positions, Time.from_msg(message.header.stamp).nanoseconds
+        )
+
+    def _publish_twist_state(self, side: Side, decision) -> None:
+        snapshot = getattr(decision, "twist", None)
+        if snapshot is None:
+            return
+        state = TwistState()
+        state.header.stamp = self.get_clock().now().to_msg()
+        state.header.frame_id = ""
+        state.side = side.value
+        state.valid = bool(snapshot.valid)
+        state.active = bool(snapshot.active)
+        state.gate_aperture = float(snapshot.gate_aperture)
+        state.gate_extension = float(snapshot.gate_extension)
+        state.gate_on_count = int(snapshot.gate_on_count)
+        state.gate_off_count = int(snapshot.gate_off_count)
+        state.theta_task = float(snapshot.theta_task)
+        state.theta_base = float(snapshot.theta_base)
+        state.theta_increment = float(snapshot.theta_increment)
+        state.theta_robot_cmd = float(snapshot.theta_robot_cmd)
+        state.theta_robot_fb = float(snapshot.theta_robot_fb)
+        state.theta_robot_fb_available = bool(snapshot.theta_robot_fb_available)
+        state.axis_deviation_cmd_deg = float(snapshot.axis_deviation_cmd_deg)
+        state.axis_deviation_fb_deg = float(snapshot.axis_deviation_fb_deg)
+        state.axis_deviation_fb_available = bool(
+            snapshot.axis_deviation_fb_available
+        )
+        state.objective_total = float(snapshot.objective_total)
+        state.objective_rot = float(snapshot.objective_rot)
+        state.objective_conn = float(snapshot.objective_conn)
+        state.objective_axis = float(snapshot.objective_axis)
+        state.objective_pos = float(snapshot.objective_pos)
+        state.refinement_status = _REFINEMENT_VALUES.get(
+            snapshot.refinement_status, TwistState.REFINEMENT_NOT_ACTIVE
+        )
+        state.failure_reason = _FAILURE_VALUES.get(
+            snapshot.failure_reason, TwistState.FAILURE_REFINEMENT_REJECTED
+        )
+        state.iterations = int(snapshot.iterations)
+        state.evaluations = int(snapshot.evaluations)
+        state.solve_duration_sec = float(snapshot.solve_duration_sec)
+        self._twist_publishers[side].publish(state)
 
     def _publish_state(self, side: Side, decision) -> None:
         """Convert one pure decision to the sole RetargetingState wire schema."""
@@ -398,6 +536,28 @@ class HandRetargetingNode(Node):
         state.recovery_valid_duration_sec = decision.recovery_valid_duration_sec
         self._state_publishers[side].publish(state)
 
+    def _publish_invalid_twist_state(self, side: Side) -> None:
+        """Publish an explicit unavailable snapshot when no session exists."""
+        state = TwistState()
+        state.header.stamp = self.get_clock().now().to_msg()
+        state.header.frame_id = ""
+        state.side = side.value
+        state.valid = False
+        state.active = False
+        for name in (
+            "gate_aperture", "gate_extension", "theta_task", "theta_base",
+            "theta_increment", "theta_robot_cmd", "theta_robot_fb",
+            "axis_deviation_cmd_deg", "axis_deviation_fb_deg",
+            "objective_total", "objective_rot", "objective_conn",
+            "objective_axis", "objective_pos", "solve_duration_sec",
+        ):
+            setattr(state, name, math.nan)
+        state.theta_robot_fb_available = False
+        state.axis_deviation_fb_available = False
+        state.refinement_status = TwistState.REFINEMENT_NOT_ACTIVE
+        state.failure_reason = TwistState.FAILURE_BACKEND_UNAVAILABLE
+        self._twist_publishers[side].publish(state)
+
     def _publish_model_error(self, side: Side, raw: RawHandFrame) -> None:
         self.get_logger().error(
             f"cannot process {side.value} RawHandFrame while model is unavailable"
@@ -408,6 +568,7 @@ class HandRetargetingNode(Node):
             Time.from_msg(raw.header.stamp).nanoseconds,
         )
         self._publish_state(side, decision)
+        self._publish_invalid_twist_state(side)
 
 
 def main(args=None) -> None:

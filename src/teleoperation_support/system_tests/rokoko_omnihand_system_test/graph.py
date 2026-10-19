@@ -48,6 +48,23 @@ def _retarget_parameter_overrides() -> list[Parameter]:
         Parameter("recovery_min_duration_sec", value=0.1),
         Parameter("recovery_confirmation_timeout_sec", value=0.5),
         Parameter("thumb_roll_sensitivity", value=1.0),
+        Parameter("twist_gate_aperture_on", value=0.45),
+        Parameter("twist_gate_aperture_off", value=0.70),
+        Parameter("twist_gate_extension_min", value=0.50),
+        Parameter("twist_gate_on_frames", value=3),
+        Parameter("twist_gate_off_frames", value=3),
+        Parameter("twist_weight_rot", value=1.0),
+        Parameter("twist_weight_conn", value=1.0),
+        Parameter("twist_weight_axis", value=0.5),
+        Parameter("twist_weight_pos", value=0.5),
+        Parameter("twist_iterations", value=5),
+        Parameter("twist_step_max", value=0.02),
+        Parameter("twist_trust_region", value=0.10),
+        Parameter("twist_delta_theta_clip", value=0.52),
+        Parameter("twist_gradient_tolerance", value=1e-3),
+        Parameter("twist_axis_epsilon", value=1e-6),
+        Parameter("twist_projection_epsilon", value=1e-4),
+        Parameter("twist_axis_deviation_limit_deg", value=60.0),
     ]
 
 

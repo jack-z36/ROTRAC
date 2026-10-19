@@ -574,6 +574,7 @@ def build_config(values: dict) -> RetargetingConfig:
         values["recovery_min_duration_sec"],
         values["recovery_confirmation_timeout_sec"],
         values["thumb_roll_sensitivity"],
+        None,
     )
 
 

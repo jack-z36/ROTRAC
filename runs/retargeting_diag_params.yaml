@@ -15,3 +15,22 @@
     stale_timeout_sec: 0.5
     recovery_min_valid_frames: 3
     recovery_min_duration_sec: 0.1
+    # DexTwist functional layer. All values are UNcalibrated first-pass
+    # settings for the pilot only; they are not acceptance results.
+    twist_gate_aperture_on: 0.45
+    twist_gate_aperture_off: 0.70
+    twist_gate_extension_min: 0.50
+    twist_gate_on_frames: 3
+    twist_gate_off_frames: 3
+    twist_weight_rot: 1.0
+    twist_weight_conn: 1.0
+    twist_weight_axis: 0.5
+    twist_weight_pos: 0.5
+    twist_iterations: 5
+    twist_step_max: 0.02
+    twist_trust_region: 0.10
+    twist_delta_theta_clip: 0.52
+    twist_gradient_tolerance: 0.001
+    twist_axis_epsilon: 0.000001
+    twist_projection_epsilon: 0.0001
+    twist_axis_deviation_limit_deg: 60.0

@@ -176,7 +176,7 @@ def test_real_unreachable_thumb_projects_to_fk_target_and_keeps_validity_gate():
     config = RetargetingConfig(
         1e-6, 1e-6, 1e-6, 3, 2,
         (0.01,) * 5, (0.10,) * 5, (0.05,) * 5,
-        250, 0.25, (0.1,) * 10, 0.5, 2, 0.1, 0.5, 1.0,
+        250, 0.25, (0.1,) * 10, 0.5, 2, 0.1, 0.5, 1.0, None,
     )
     suffixes = (
         "Hand", "ThumbProximal", "ThumbMedial", "ThumbDistal", "ThumbTip",
@@ -230,7 +230,7 @@ def test_real_left_pip_commands_follow_palm_flexion_direction():
     config = RetargetingConfig(
         1e-6, 1e-6, 1e-6, 3, 2,
         (0.01,) * 5, (0.10,) * 5, (0.05,) * 5,
-        500, 0.5, (0.1,) * 10, 0.5, 3, 0.1, 0.5, 1.0,
+        500, 0.5, (0.1,) * 10, 0.5, 3, 0.1, 0.5, 1.0, None,
     )
     optimizer = NloptSlsqpOptimizer(coupling, kinematics, 500, 0.5)
     session = RetargetingSession(
@@ -312,7 +312,7 @@ def _real_left_direction_session():
     config = RetargetingConfig(
         1e-6, 1e-6, 1e-6, 3, 2,
         (0.01,) * 5, (0.10,) * 5, (0.05,) * 5,
-        500, 0.5, (0.1,) * 10, 0.5, 3, 0.1, 0.5, 1.0,
+        500, 0.5, (0.1,) * 10, 0.5, 3, 0.1, 0.5, 1.0, None,
     )
     session = RetargetingSession(
         Side.LEFT, config, geometry, coupling=coupling,

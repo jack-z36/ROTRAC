@@ -43,6 +43,77 @@ def _five_positive(values: object, name: str) -> tuple[float, ...]:
     return tuple(_positive_number(value, name) for value in values)
 
 
+def _finite_non_negative(value: object, name: str) -> float:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ValueError(f"{name} must be a non-negative finite number")
+    result = float(value)
+    if not math.isfinite(result) or result < 0.0:
+        raise ValueError(f"{name} must be a non-negative finite number")
+    return result
+
+
+@dataclass(frozen=True)
+class TwistConfig:
+    """Uncalibrated DexTwist parameters; every value is supplied explicitly."""
+
+    gate_aperture_on: float
+    gate_aperture_off: float
+    gate_extension_min: float
+    gate_on_frames: int
+    gate_off_frames: int
+    weight_rot: float
+    weight_conn: float
+    weight_axis: float
+    weight_pos: float
+    iterations: int
+    step_max: float
+    trust_region: float
+    delta_theta_clip: float
+    gradient_tolerance: float
+    axis_epsilon: float
+    projection_epsilon: float
+    axis_deviation_limit_deg: float
+
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self, "gate_aperture_on",
+            _positive_number(self.gate_aperture_on, "gate_aperture_on"),
+        )
+        object.__setattr__(
+            self, "gate_aperture_off",
+            _positive_number(self.gate_aperture_off, "gate_aperture_off"),
+        )
+        if not self.gate_aperture_off > self.gate_aperture_on:
+            raise ValueError("gate_aperture_off must be greater than gate_aperture_on")
+        object.__setattr__(
+            self, "gate_extension_min",
+            _finite_non_negative(self.gate_extension_min, "gate_extension_min"),
+        )
+        for name in ("gate_on_frames", "gate_off_frames", "iterations"):
+            value = getattr(self, name)
+            if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+                raise ValueError(f"{name} must be a positive integer")
+        for name in ("weight_rot", "weight_conn", "weight_axis", "weight_pos"):
+            object.__setattr__(
+                self, name, _finite_non_negative(getattr(self, name), name)
+            )
+        for name in (
+            "step_max", "trust_region", "delta_theta_clip",
+            "gradient_tolerance", "axis_epsilon", "projection_epsilon",
+        ):
+            object.__setattr__(
+                self, name, _positive_number(getattr(self, name), name)
+            )
+        object.__setattr__(
+            self, "axis_deviation_limit_deg",
+            _positive_number(
+                self.axis_deviation_limit_deg, "axis_deviation_limit_deg"
+            ),
+        )
+        if self.axis_deviation_limit_deg > 180.0:
+            raise ValueError("axis_deviation_limit_deg must not exceed 180")
+
+
 @dataclass(frozen=True)
 class RetargetingConfig:
     """Uncalibrated T05 parameters; every value must be supplied explicitly."""
@@ -63,11 +134,14 @@ class RetargetingConfig:
     recovery_min_duration_sec: float
     recovery_confirmation_timeout_sec: float
     thumb_roll_sensitivity: float
+    twist: TwistConfig | None
     thumb_abad_sensitivity: float = 1.0
     thumb_roll_fixed_value: float | None = None
     thumb_abad_fixed_value: float | None = None
 
     def __post_init__(self) -> None:
+        if self.twist is not None and not isinstance(self.twist, TwistConfig):
+            raise ValueError("twist must be a TwistConfig or None")
         for name in ("palm_y_epsilon", "palm_x_epsilon", "finger_length_epsilon"):
             object.__setattr__(self, name, _positive_number(getattr(self, name), name))
         for name in ("length_window_size", "stable_window_count"):
@@ -105,6 +179,37 @@ class RetargetingConfig:
             ):
                 raise ValueError(f"{fixed_name} must be finite or unset")
             object.__setattr__(self, fixed_name, float(fixed_value))
+
+
+@dataclass(frozen=True)
+class TwistSnapshot:
+    """Pure twist diagnostics for one processed frame."""
+
+    active: bool
+    gate_aperture: float
+    gate_extension: float
+    gate_on_count: int
+    gate_off_count: int
+    theta_task: float
+    theta_base: float
+    theta_increment: float
+    theta_robot_cmd: float
+    theta_robot_fb: float
+    theta_robot_fb_available: bool
+    axis_deviation_cmd_deg: float
+    axis_deviation_fb_deg: float
+    axis_deviation_fb_available: bool
+    objective_total: float
+    objective_rot: float
+    objective_conn: float
+    objective_axis: float
+    objective_pos: float
+    refinement_status: str
+    failure_reason: str | None
+    iterations: int
+    evaluations: int
+    solve_duration_sec: float
+    valid: bool = True
 
 
 @dataclass(frozen=True)
@@ -150,6 +255,7 @@ class RetargetingDecision:
     target_projection_applied: tuple[bool, ...] = (False,) * 5
     target_projection_distance_available: tuple[bool, ...] = (False,) * 5
     normalized_target_projection_distance: tuple[float, ...] = (math.nan,) * 5
+    twist: TwistSnapshot | None = None
 
 
 def _positive_vector(value: object, size: int, name: str) -> tuple[float, ...]:

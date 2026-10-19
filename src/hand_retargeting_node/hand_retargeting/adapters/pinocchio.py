@@ -48,6 +48,15 @@ class PinocchioFingerKinematics:
     def tip_position_and_jacobian(
         self, full_q: np.ndarray, tip_frame: str
     ) -> tuple[np.ndarray, np.ndarray]:
+        positions, jacobians = self.tip_positions_and_jacobians(
+            full_q, (tip_frame,)
+        )
+        return positions[0], jacobians[0]
+
+    def tip_positions_and_jacobians(
+        self, full_q: np.ndarray, tip_frames
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """Return several tripod tip positions and 3x16 Jacobians in one FK pass."""
         import pinocchio as pin
 
         q_contract = np.asarray(full_q, dtype=np.float64)
@@ -57,24 +66,25 @@ class PinocchioFingerKinematics:
         q[list(self._pin_q_indices)] = q_contract
         pin.forwardKinematics(self.model, self.data, q)
         pin.updateFramePlacements(self.model, self.data)
-        tip_id = self.model.getFrameId(tip_frame)
-        if tip_id >= len(self.model.frames):
-            raise ValueError(f"missing tip frame {tip_frame}")
         palm = self.data.oMf[self.palm_id]
-        tip = self.data.oMf[tip_id]
-        # LOCAL_WORLD_ALIGNED gives the derivative of the frame-origin
-        # translation in fixed world axes.  ``WORLD`` is a spatial-velocity
-        # representation whose linear block is not the direct translation
-        # derivative needed by the IK chain rule at a non-root frame.
-        jacobian = pin.computeFrameJacobian(
-            self.model, self.data, q, tip_id, pin.ReferenceFrame.LOCAL_WORLD_ALIGNED
-        )[:3, :]
-        # Express both position and the complete translation Jacobian in palm
-        # coordinates. No active-column extraction is permitted here.
-        return (
-            palm.rotation.T @ (tip.translation - palm.translation),
-            palm.rotation.T @ jacobian[:, list(self._pin_q_indices)],
-        )
+        positions = []
+        jacobians = []
+        for tip_frame in tip_frames:
+            tip_id = self.model.getFrameId(tip_frame)
+            if tip_id >= len(self.model.frames):
+                raise ValueError(f"missing tip frame {tip_frame}")
+            tip = self.data.oMf[tip_id]
+            jacobian = pin.computeFrameJacobian(
+                self.model, self.data, q, tip_id,
+                pin.ReferenceFrame.LOCAL_WORLD_ALIGNED,
+            )[:3, :]
+            positions.append(
+                palm.rotation.T @ (tip.translation - palm.translation)
+            )
+            jacobians.append(
+                palm.rotation.T @ jacobian[:, list(self._pin_q_indices)]
+            )
+        return np.stack(positions, axis=0), np.stack(jacobians, axis=0)
 
 
 def load_pinocchio_kinematics(assets, side: str) -> PinocchioFingerKinematics:

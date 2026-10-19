@@ -60,6 +60,7 @@ def _config(**changes):
         "recovery_confirmation_timeout_sec": 0.5,
         "thumb_roll_sensitivity": 1.0,
     }
+    values.setdefault("twist", None)
     values.update(changes)
     return RetargetingConfig(**values)
 
