@@ -50,4 +50,5 @@ colcon test && colcon test-result
 
 - 开始任何任务前先读 [AGENTS.md](AGENTS.md)（agent 路由）与 [STATUS.md](STATUS.md)（现状快照）
 - 知识与手册：[docs/](docs/) ｜ 架构决策：[docs/adr/INDEX.md](docs/adr/INDEX.md) ｜ 术语：[CONTEXT.md](CONTEXT.md)
+- 跨机器部署：[docs/跨机器部署与构建指南.md](docs/跨机器部署与构建指南.md)
 - 在途工作：`.scratch/`（票据）｜ 历史追溯：[archive/INDEX.md](archive/INDEX.md)

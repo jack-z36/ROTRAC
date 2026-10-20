@@ -29,6 +29,7 @@ Single-context: `CONTEXT.md` at the repo root + `docs/adr/`. See `docs/agents/do
 - 开工先读 [STATUS.md](STATUS.md)：现状快照（能力基线 / 在途 / 已知问题），从中找到 `.scratch/` 活票据
 - 术语唯一权威是 [CONTEXT.md](CONTEXT.md)：输出用词以其为准，概念冲突立即上报
 - 稳定知识与手册在 [docs/](docs/)：架构边界、接口语义、算法基线、启动手册、真机前置条件
+- 另一台电脑从零部署：先读 [docs/跨机器部署与构建指南.md](docs/跨机器部署与构建指南.md)（部署之“道”：探测、构建、真机验收、失败模式）
 - 架构决策查 [docs/adr/](docs/adr/)；结论与 ADR 冲突时显式指出，不得静默覆盖
 - [CODING_STANDARDS.md](CODING_STANDARDS.md) 只在 code review 阶段读，实现阶段不占上下文
 - 写任何 .md 前先读 [skills/doc-writing/SKILL.md](skills/doc-writing/SKILL.md)（落点判定树；写错位置会被 hook 拦截）
